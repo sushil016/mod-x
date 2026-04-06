@@ -67,6 +67,9 @@ Respond ONLY with valid JSON in this exact format (no markdown, no explanation o
           content: [
             {
               type: "image",
+              // Frames extracted from GIF/video are always JPEG; for single images
+              // the buffer is sent as-is and most vision models are self-describing
+              // from the binary header, but we declare JPEG as the safe default.
               source: { type: "base64", media_type: "image/jpeg", data: base64 },
             },
             {

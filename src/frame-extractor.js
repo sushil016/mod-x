@@ -28,11 +28,10 @@ export async function extractFrames(inputPath, options = {}) {
     const cmd = ffmpeg(inputPath);
 
     if (frameCount) {
-      // GIF: select every Nth frame to get ~frameCount frames
-      cmd.outputOptions([
-        `-vf select='not(mod(n\\,2))'`,
-        `-frames:v ${frameCount}`,
-      ]);
+      // GIF: decode all frames at 1fps then take the first frameCount.
+      // `fps=1` works per GIF "second" of playback; for short animated GIFs
+      // this reliably samples evenly across the animation.
+      cmd.outputOptions([`-vf fps=1`, `-frames:v ${frameCount}`]);
     } else {
       // Video: 1 frame every `interval` seconds, capped at maxFrames
       cmd.outputOptions([`-vf fps=1/${interval}`, `-frames:v ${maxFrames}`]);

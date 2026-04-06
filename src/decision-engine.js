@@ -1,5 +1,4 @@
 // src/decision-engine.js
-import "dotenv/config";
 
 const THRESHOLDS = {
   block: {
