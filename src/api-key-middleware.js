@@ -1,30 +1,40 @@
 // src/api-key-middleware.js
-
-// Load valid API keys from env (comma-separated) at startup
-const validKeys = new Set(
-  (process.env.VALID_API_KEYS || "")
-    .split(",")
-    .map((k) => k.trim())
-    .filter(Boolean)
-);
+import sql from "./db.js";
 
 /**
- * Express middleware that validates API key from Authorization header.
- * Rejects with 401 if key is missing or not in the valid set.
- *
- * Usage: app.use(requireApiKey) before any protected routes.
- *
- * Expected header: Authorization: Bearer <api-key>
+ * Validates the API key from Authorization: Bearer <key> header.
+ * Looks up key in the database (not .env).
+ * On success: attaches req.apiKey = { id, userId, plan } and continues.
+ * On failure: returns 401.
  */
-export function requireApiKey(req, res, next) {
+export async function requireApiKey(req, res, next) {
   const authHeader = req.headers["authorization"] || "";
   const key = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
 
-  if (!key || !validKeys.has(key)) {
-    return res.status(401).json({ error: "Invalid or missing API key" });
+  if (!key) {
+    return res.status(401).json({ error: "Missing API key. Use Authorization: Bearer <key>" });
   }
 
+  const [row] = await sql`
+    SELECT ak.id, ak.user_id, ak.expires_at, u.plan
+    FROM api_keys ak
+    JOIN users u ON u.id = ak.user_id
+    WHERE ak.key = ${key} AND ak.is_active = true
+  `;
+
+  if (!row) {
+    return res.status(401).json({ error: "Invalid API key" });
+  }
+
+  if (row.expires_at && new Date(row.expires_at) < new Date()) {
+    return res.status(401).json({ error: "API key has expired" });
+  }
+
+  // Update last_used_at (fire-and-forget)
+  sql`UPDATE api_keys SET last_used_at = now() WHERE id = ${row.id}`.catch(() => {});
+
+  req.apiKey = { id: row.id, userId: row.user_id, plan: row.plan };
   next();
 }
