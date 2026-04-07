@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "./lib/api.js";
+import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Playground from "./pages/Playground.jsx";
@@ -64,9 +65,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/*" element={<ProtectedLayout />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/"       element={<Landing />} />
+        <Route path="/login"  element={<Login />} />
+        <Route path="/*"      element={<ProtectedLayout />} />
       </Routes>
     </BrowserRouter>
   );
