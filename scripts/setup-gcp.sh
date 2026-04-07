@@ -10,7 +10,6 @@ set -euo pipefail
 PROJECT="${1:?Usage: $0 <GCP_PROJECT_ID> <GITHUB_REPO e.g. user/repo>}"
 REPO="${2:?Usage: $0 <GCP_PROJECT_ID> <GITHUB_REPO>}"
 REGION="us-central1"
-SERVICE="mod-me"
 SA_NAME="mod-me-deployer"
 POOL_NAME="github-pool"
 PROVIDER_NAME="github-provider"
@@ -24,7 +23,6 @@ gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
-  secretmanager.googleapis.com \
   iamcredentials.googleapis.com \
   --quiet
 
@@ -48,7 +46,6 @@ SA_EMAIL="$SA_NAME@$PROJECT.iam.gserviceaccount.com"
 for ROLE in \
   roles/run.admin \
   roles/artifactregistry.writer \
-  roles/secretmanager.secretAccessor \
   roles/iam.serviceAccountUser; do
   gcloud projects add-iam-policy-binding "$PROJECT" \
     --member="serviceAccount:$SA_EMAIL" \
@@ -83,38 +80,32 @@ gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
 PROVIDER_ID=$(gcloud iam workload-identity-pools providers describe "$PROVIDER_NAME" \
   --location=global --workload-identity-pool="$POOL_NAME" --format="value(name)")
 
-# ── Create Secret Manager secrets (values set manually after this script) ───
-echo "▶ Creating Secret Manager secrets..."
-for SECRET in DATABASE_URL JWT_SECRET COOKIE_SECRET \
-              GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET \
-              REDIS_HOST REDIS_PORT REDIS_PASSWORD; do
-  gcloud secrets create "$SECRET" --replication-policy="automatic" --quiet \
-    2>/dev/null || echo "  $SECRET already exists"
-done
-
-# ── Cloud Run: grant Secret Manager access ──────────────────────────────────
-# Cloud Run uses the Compute default SA by default — give it secret access too
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format="value(projectNumber)")
-gcloud projects add-iam-policy-binding "$PROJECT" \
-  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor" \
-  --quiet
-
 # ── Print GitHub Actions secrets to set ─────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "  ✅ GCP setup complete. Add these to GitHub Actions secrets:"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
+echo "  ── GCP Infrastructure (3 secrets) ──"
 echo "  GCP_PROJECT_ID                → $PROJECT"
 echo "  GCP_SERVICE_ACCOUNT           → $SA_EMAIL"
 echo "  GCP_WORKLOAD_IDENTITY_PROVIDER→ $PROVIDER_ID"
 echo ""
-echo "  Then fill Secret Manager values in GCP Console:"
-echo "  https://console.cloud.google.com/security/secret-manager?project=$PROJECT"
+echo "  ── App Secrets (set your actual values) ──"
+echo "  DATABASE_URL                  → postgresql://user:pass@host/db?sslmode=require"
+echo "  JWT_SECRET                    → $(openssl rand -hex 32)"
+echo "  COOKIE_SECRET                 → $(openssl rand -hex 32)"
+echo "  GOOGLE_CLIENT_ID              → (from GCP OAuth credentials)"
+echo "  GOOGLE_CLIENT_SECRET          → (from GCP OAuth credentials)"
+echo "  REDIS_HOST                    → (Upstash Redis endpoint, or leave blank)"
+echo "  REDIS_PORT                    → 6379"
+echo "  REDIS_PASSWORD                → (Upstash Redis password, or leave blank)"
 echo ""
-echo "  Also add the Cloud Run URL to:"
-echo "    GOOGLE_CALLBACK_URL  → https://<your-url>/auth/google/callback"
-echo "    CLIENT_URL           → https://<your-url>"
+echo "  ── Set AFTER first deploy (you'll get the URL then) ──"
+echo "  GOOGLE_CALLBACK_URL           → https://<your-cloud-run-url>/auth/google/callback"
+echo "  CLIENT_URL                    → https://<your-cloud-run-url>"
 echo ""
 echo "  Push to main to trigger first deploy."
+echo ""
+echo "  Add GOOGLE_CALLBACK_URL to your Google OAuth app's authorized redirect URIs:"
+echo "  https://console.cloud.google.com/apis/credentials?project=$PROJECT"
