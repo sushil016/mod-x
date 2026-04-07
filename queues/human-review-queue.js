@@ -9,6 +9,9 @@ const connection = {
 
 const reviewQueue = new Queue("human-review", { connection });
 
+// Suppress unhandled Redis connection errors — queue is best-effort
+reviewQueue.on("error", () => {});
+
 /**
  * Add a flagged moderation result to the human review queue.
  *
@@ -16,12 +19,19 @@ const reviewQueue = new Queue("human-review", { connection });
  * @returns {Promise<void>}
  */
 export async function addToHumanReviewQueue(moderationResult) {
-  await reviewQueue.add("review-item", moderationResult, {
-    attempts: 3,
-    backoff: { type: "exponential", delay: 2000 },
-  });
-  logger.info("Added to human review queue", {
-    uploadId: moderationResult.meta?.uploadId,
-    finalDecision: moderationResult.finalDecision,
-  });
+  try {
+    await reviewQueue.add("review-item", moderationResult, {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 2000 },
+    });
+    logger.info("Added to human review queue", {
+      uploadId: moderationResult.meta?.uploadId,
+      finalDecision: moderationResult.finalDecision,
+    });
+  } catch {
+    // Redis unavailable — log and continue (queue is best-effort)
+    logger.warn("Human review queue unavailable, skipping queue", {
+      uploadId: moderationResult.meta?.uploadId,
+    });
+  }
 }

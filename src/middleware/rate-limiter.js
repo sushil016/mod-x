@@ -4,7 +4,13 @@ import Redis from "ioredis";
 const redis = new Redis({
   host: process.env.REDIS_HOST || "127.0.0.1",
   port: parseInt(process.env.REDIS_PORT || "6379"),
+  enableOfflineQueue: false,
+  lazyConnect: true,
+  retryStrategy: (times) => Math.min(times * 500, 5000),
 });
+
+// Suppress unhandled connection errors — rate limiter degrades gracefully
+redis.on("error", () => {});
 
 const WINDOW_SECONDS = 60 * 60; // 1 hour
 
@@ -27,14 +33,19 @@ export async function rateLimiter(req, res, next) {
 
   // Sliding window using Redis sorted set
   // Score = timestamp ms, member = unique request id
-  const multi = redis.multi();
-  multi.zremrangebyscore(redisKey, "-inf", windowStart);        // remove old entries
-  multi.zadd(redisKey, now, `${now}-${Math.random()}`);         // add current request
-  multi.zcard(redisKey);                                         // count in window
-  multi.expire(redisKey, WINDOW_SECONDS);                        // auto-expire key
-
-  const results = await multi.exec();
-  const count = results[2][1]; // zcard result
+  let count;
+  try {
+    const multi = redis.multi();
+    multi.zremrangebyscore(redisKey, "-inf", windowStart);
+    multi.zadd(redisKey, now, `${now}-${Math.random()}`);
+    multi.zcard(redisKey);
+    multi.expire(redisKey, WINDOW_SECONDS);
+    const results = await multi.exec();
+    count = results[2][1];
+  } catch {
+    // Redis unavailable — skip rate limiting and pass through
+    return next();
+  }
 
   const resetAt = Math.ceil((now + WINDOW_SECONDS * 1000) / 1000);
 
