@@ -1,0 +1,27 @@
+# Dependencies (re-installed in Docker)
+node_modules/
+client/node_modules/
+client/.vite/
+
+# Built output (rebuilt in Docker)
+client/dist/
+
+# Secrets — NEVER bake into image
+.env
+.env.*
+!.env.example
+service-account.json
+
+# Dev / test artefacts
+tmp/
+tests/
+docs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.vscode/
+*.DS_Store
