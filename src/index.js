@@ -4,6 +4,7 @@ import express from "express";
 import multer from "multer";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import session from "express-session";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -30,7 +31,17 @@ app.use(cors({
 }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
+
+// Session required by Passport's Google OAuth state store (not used for auth — JWT handles that)
+app.use(session({
+  secret: process.env.COOKIE_SECRET || "dev-secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === "production", maxAge: 5 * 60 * 1000 }, // 5 min — just for OAuth dance
+}));
+
 app.use(passport.initialize());
+app.use(passport.session());
 
 // ── Auth routes (no JWT required) ────────────────────────────────────────────
 app.use("/auth", authRouter);
@@ -106,6 +117,16 @@ app.get("*", (_req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 await runMigrations();
-app.listen(PORT, () => {
+
+const server = app.listen(PORT, () => {
   logger.info("Moderation service running", { port: PORT });
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    logger.error(`Port ${PORT} is already in use. Set a different PORT= in .env or kill the process using it.`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
 });

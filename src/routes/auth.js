@@ -78,14 +78,16 @@ function issueTokens(res, user) {
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 router.get("/google",
-  passport.authenticate("google", { scope: ["profile", "email"], session: false })
+  passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 router.get("/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/login?error=oauth" }),
+  passport.authenticate("google", { failureRedirect: "/login?error=oauth" }),
   (req, res) => {
     issueTokens(res, req.user);
-    res.redirect("/dashboard");
+    // In dev: redirect to Vite dev server. In prod: Express serves the SPA so /dashboard is fine.
+    const base = process.env.NODE_ENV === "production" ? "" : (process.env.CLIENT_URL || "http://localhost:5173");
+    res.redirect(`${base}/dashboard`);
   }
 );
 
