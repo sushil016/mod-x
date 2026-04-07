@@ -6,10 +6,8 @@ client/.vite/
 # Built output (rebuilt in Docker)
 client/dist/
 
-# Secrets — NEVER bake into image
-.env
-.env.*
-!.env.example
+# Secrets — .env is intentionally included (baked into image for deployment)
+.env.example
 service-account.json
 
 # Dev / test artefacts

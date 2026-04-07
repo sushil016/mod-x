@@ -29,9 +29,15 @@ COPY scripts/   ./scripts/
 # Copy pre-built React SPA into the location Express serves from
 COPY --from=client-builder /build/client/dist ./client/dist
 
-# Cloud Run sets PORT env var automatically — we honour it in index.js
+# Bake in environment secrets
+COPY .env ./
+
+# Production overrides — these take priority over .env values
+# Cloud Run uses Application Default Credentials, no key file needed
+# Cloud Run sets PORT automatically
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV GOOGLE_APPLICATION_CREDENTIALS=""
 
 EXPOSE 8080
 
