@@ -1,9 +1,10 @@
-// client/src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "./lib/api.js";
+import Sidebar from "./components/Sidebar.jsx";
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
+import Docs from "./pages/Docs.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Playground from "./pages/Playground.jsx";
 import Stats from "./pages/Stats.jsx";
@@ -16,47 +17,38 @@ function AuthGuard({ children, adminOnly = false }) {
     retry: false,
   });
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
   if (isError || !user) return <Navigate to="/login" replace />;
   if (adminOnly && !user.is_admin) return <Navigate to="/dashboard" replace />;
 
   return children;
 }
 
-function Nav({ user }) {
+function AppLayout() {
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-      <span className="font-bold text-brand-600 text-lg">ModMe</span>
-      <div className="flex items-center gap-6 text-sm">
-        <a href="/dashboard"  className="text-gray-600 hover:text-brand-600">Keys</a>
-        <a href="/playground" className="text-gray-600 hover:text-brand-600">Playground</a>
-        <a href="/stats"      className="text-gray-600 hover:text-brand-600">Stats</a>
-        {user?.is_admin && <a href="/admin" className="text-gray-600 hover:text-brand-600">Admin</a>}
-        <button
-          onClick={() => fetch("/auth/logout", { method: "POST", credentials: "include" }).then(() => window.location = "/login")}
-          className="text-gray-400 hover:text-red-500"
-        >
-          Logout
-        </button>
-        <img src={user?.avatar_url} className="w-8 h-8 rounded-full" alt="" />
+    <AuthGuard>
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Sidebar />
+        <main className="ml-60 flex-1 min-h-screen overflow-y-auto">
+          <div className="max-w-6xl mx-auto px-8 py-8">
+            <Routes>
+              <Route path="/dashboard"  element={<Dashboard />} />
+              <Route path="/keys"       element={<Dashboard />} />
+              <Route path="/playground" element={<Playground />} />
+              <Route path="/stats"      element={<Stats />} />
+              <Route path="/admin"      element={
+                <AuthGuard adminOnly>
+                  <Admin />
+                </AuthGuard>
+              } />
+            </Routes>
+          </div>
+        </main>
       </div>
-    </nav>
-  );
-}
-
-function ProtectedLayout({ adminOnly = false }) {
-  const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => apiGet("/api/me"), retry: false });
-  return (
-    <AuthGuard adminOnly={adminOnly}>
-      <Nav user={user} />
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <Routes>
-          <Route path="/dashboard"  element={<Dashboard />} />
-          <Route path="/playground" element={<Playground />} />
-          <Route path="/stats"      element={<Stats />} />
-          <Route path="/admin"      element={<Admin />} />
-        </Routes>
-      </main>
     </AuthGuard>
   );
 }
@@ -67,7 +59,8 @@ export default function App() {
       <Routes>
         <Route path="/"       element={<Landing />} />
         <Route path="/login"  element={<Login />} />
-        <Route path="/*"      element={<ProtectedLayout />} />
+        <Route path="/docs"   element={<Docs />} />
+        <Route path="/*"      element={<AppLayout />} />
       </Routes>
     </BrowserRouter>
   );
