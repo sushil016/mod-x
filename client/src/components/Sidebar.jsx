@@ -22,9 +22,14 @@ export default function Sidebar() {
     retry: false,
   });
 
-  function logout() {
-    fetch("/auth/logout", { method: "POST", credentials: "include" })
-      .then(() => { window.location = "/"; });
+  async function logout() {
+    try {
+      await fetch("/auth/logout", { method: "POST", credentials: "include" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      window.location.href = "/";
+    }
   }
 
   return (
@@ -67,7 +72,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors group ${
                 isActive
-                  ? "bg-brand-600 text-white"
+                  ? "bg-brand-600 text-white shadow-sm shadow-brand-600/30"
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
               }`
             }
@@ -110,7 +115,7 @@ export default function Sidebar() {
             <button
               onClick={logout}
               title="Logout"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500"
+              className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity text-gray-400 hover:text-red-500"
             >
               <LogOut size={14} />
             </button>
