@@ -39,6 +39,7 @@ function KeyRow({ k, onRevoke, onRename }) {
 
   function save() {
     if (name.trim() && name !== k.name) onRename(k.id, name.trim());
+    setName(k.name); // reset to current prop value
     setEditing(false);
   }
 
@@ -54,7 +55,7 @@ function KeyRow({ k, onRevoke, onRename }) {
             className="bg-transparent border border-brand-300 dark:border-brand-700 rounded px-2 py-0.5 text-sm text-gray-900 dark:text-white focus:outline-none w-48"
             value={name}
             onChange={e => setName(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") setEditing(false); }}
+            onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(k.name); setEditing(false); } }}
             autoFocus
           />
         ) : (
@@ -221,9 +222,9 @@ export default function Dashboard() {
 
       {/* Create key modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/70 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-key-title">
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Create API Key</h2>
+            <h2 id="create-key-title" className="text-lg font-bold text-gray-900 dark:text-white mb-1">Create API Key</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Give your key a name to identify where it's used.</p>
 
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
