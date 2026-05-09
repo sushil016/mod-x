@@ -17,6 +17,7 @@ import { authRouter, passport } from "./routes/auth.js";
 import { keysRouter } from "./routes/keys.js";
 import { statsRouter } from "./routes/stats.js";
 import { adminRouter } from "./routes/admin.js";
+import { billingRouter } from "./routes/billing.js";
 import { runMigrations } from "./db.js";
 import { logger } from "./utils.js";
 
@@ -62,6 +63,7 @@ app.get("/api/me", requireJwt, async (req, res) => {
 });
 app.use("/api/keys",  requireJwt, keysRouter);
 app.use("/api/stats", requireJwt, statsRouter);
+app.use("/api/billing", requireJwt, billingRouter);
 
 // ── Admin API (JWT + is_admin) ────────────────────────────────────────────────
 app.use("/api/admin", requireJwt, requireAdmin, adminRouter);

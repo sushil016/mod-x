@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext.jsx";
-import { Sun, Moon, ArrowLeft } from "lucide-react";
+import { Sun, Moon, ArrowLeft, ShieldCheck } from "lucide-react";
 
 const RESPONSE_EXAMPLE = `{
   "finalDecision": "allow",
@@ -118,18 +118,18 @@ export default function Docs() {
   const [exampleIdx, setExampleIdx] = useState(0);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
+    <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
 
       {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm">
+      <nav className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-stone-50/90 dark:bg-slate-950/90 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a href="/" className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
               <ArrowLeft size={14} /> Back
             </a>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-brand-600 flex items-center justify-center text-white font-black text-xs">M</div>
-              <span className="font-bold text-gray-900 dark:text-white">API Reference</span>
+              <ShieldCheck size={18} className="text-brand-600" />
+              <span className="font-bold text-slate-900 dark:text-white">API Reference</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -140,7 +140,7 @@ export default function Docs() {
             >
               {theme === "dark" ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
             </button>
-            <a href="/auth/google" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <a href="/auth/google" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-black transition-colors">
               Get API key
             </a>
           </div>
@@ -161,6 +161,11 @@ export default function Docs() {
 
         {/* Content */}
         <div className="flex-1 min-w-0 max-w-3xl">
+          <div className="mb-10 rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-brand-700 dark:text-brand-400">Developer docs</div>
+            <h1 className="text-4xl font-black text-slate-950 dark:text-white">Protect uploads from your first API call.</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Use one endpoint for image, GIF, and video moderation. Responses stay simple enough for product workflows and detailed enough for audits.</p>
+          </div>
 
           <Section id="overview" title="Overview">
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
@@ -224,7 +229,7 @@ export default function Docs() {
               ))}
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Maximum file size: <strong className="text-gray-700 dark:text-gray-300">100 MB</strong></p>
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-sm text-blue-800 dark:text-blue-300">
+            <div className="bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-800/60 rounded-xl p-4 text-sm text-brand-800 dark:text-brand-300">
               <strong>GIFs and videos</strong> are analyzed frame-by-frame. GIFs extract 6 evenly-spaced frames; videos extract 1 frame every 2 seconds (max 30 frames). The worst frame drives the final decision.
             </div>
           </Section>

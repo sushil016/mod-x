@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch, apiDelete } from "../lib/api.js";
+import { ShieldCheck } from "lucide-react";
 
 export default function Admin() {
   const qc = useQueryClient();
@@ -17,20 +18,24 @@ export default function Admin() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-keys"] }),
   });
 
-  const th = "px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider";
-  const td = "px-4 py-3 text-sm text-gray-700 dark:text-gray-300";
+  const th = "px-4 py-3 text-left text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider";
+  const td = "px-4 py-3 text-sm text-slate-700 dark:text-slate-300";
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white">Admin</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Platform management</p>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:border-slate-800">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-brand-300">
+          <ShieldCheck size={14} />
+          Admin layer
+        </div>
+        <h1 className="text-3xl font-black">Platform management</h1>
+        <p className="mt-2 text-sm text-slate-300">Manage users, plans, API keys, and moderation capacity.</p>
       </div>
 
       {stats && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[["Total Users", stats.total_users], ["Active Keys", stats.total_active_keys], ["Total Requests", stats.total_requests]].map(([label, val]) => (
-            <div key={label} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 text-center">
+            <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 text-center shadow-sm">
               <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
               <p className="text-3xl font-black text-gray-900 dark:text-white mt-1">{val?.toLocaleString() ?? "—"}</p>
             </div>
@@ -38,16 +43,16 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="font-bold text-gray-900 dark:text-white">Users</h2>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h2 className="font-black text-slate-900 dark:text-white">Users</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <tr>{["Email", "Plan", "Keys", "Calls", "Joined", "Admin"].map(h => <th key={h} className={th}>{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {users.map(u => (
                 <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <td className={td}>{u.email}</td>
@@ -69,7 +74,7 @@ export default function Admin() {
                       type="checkbox"
                       checked={u.is_admin}
                       onChange={e => updateUser.mutate({ id: u.id, isAdmin: e.target.checked })}
-                      className="accent-brand-600"
+                      className="accent-brand-500"
                     />
                   </td>
                 </tr>
@@ -79,16 +84,16 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="font-bold text-gray-900 dark:text-white">All API Keys</h2>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h2 className="font-black text-slate-900 dark:text-white">All API Keys</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <tr>{["Name", "Owner", "Calls", "Last Used", "Status", ""].map(h => <th key={h} className={th}>{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {keys.map(k => (
                 <tr key={k.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <td className={`${td} font-medium text-gray-900 dark:text-white`}>{k.name}</td>

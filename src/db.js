@@ -67,10 +67,26 @@ export async function runMigrations() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS billing_events (
+      id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      plan           TEXT NOT NULL,
+      amount_cents   INT NOT NULL,
+      currency       TEXT NOT NULL DEFAULT 'usd',
+      status         TEXT NOT NULL DEFAULT 'paid',
+      card_brand     TEXT,
+      card_last4     TEXT,
+      billing_email  TEXT,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
   await sql`CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON usage_logs(user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key_id ON usage_logs(api_key_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_usage_logs_created_at ON usage_logs(created_at)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_billing_events_user_id ON billing_events(user_id)`;
 
   console.log("DB migrations complete");
 }

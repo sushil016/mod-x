@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "../lib/api.js";
 import VerdictBadge from "../components/VerdictBadge.jsx";
 import ScoreBar from "../components/ScoreBar.jsx";
-import { Upload, ChevronDown } from "lucide-react";
+import { Upload, ChevronDown, Play, ShieldCheck, FileVideo } from "lucide-react";
 
 export default function Playground() {
   const [file, setFile] = useState(null);
@@ -48,19 +48,29 @@ export default function Playground() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 dark:text-white">Playground</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Test the moderation API live in your browser</p>
+    <div className="space-y-6">
+      <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="absolute right-6 top-6 hidden h-24 w-24 rounded-full border border-brand-500/20 md:block">
+          <div className="core-ring" />
+        </div>
+        <div className="relative max-w-2xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-brand-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-brand-700 dark:bg-brand-950/30 dark:text-brand-300">
+            <Play size={13} />
+            Live test
+          </div>
+          <h1 className="text-3xl font-black text-slate-950 dark:text-white">Moderation playground</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Upload a real media file, choose an active key, and verify the exact allow, flag, or block payload your app receives.</p>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-5">
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 space-y-5 shadow-sm">
         {/* API Key selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">API Key</label>
           <div className="relative">
             <select
-              className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-brand-500 pr-9"
+              className="w-full appearance-none bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-brand-500 pr-9"
               value={selectedKey}
               onChange={e => setSelectedKey(e.target.value)}
             >
@@ -81,7 +91,7 @@ export default function Playground() {
             onDrop={onDrop}
             onDragOver={e => e.preventDefault()}
             onClick={() => inputRef.current?.click()}
-            className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-10 text-center cursor-pointer hover:border-brand-400 dark:hover:border-brand-600 transition-colors group"
+            className="border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-10 text-center cursor-pointer hover:border-brand-400 dark:hover:border-brand-600 hover:bg-brand-50/40 dark:hover:bg-brand-950/10 transition-colors group"
           >
             {file ? (
               <div>
@@ -97,8 +107,8 @@ export default function Playground() {
               </div>
             ) : (
               <div>
-                <Upload size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-600 group-hover:text-brand-400 transition-colors" />
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Drop a file here or click to browse</p>
+                <Upload size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-600 group-hover:text-brand-500 transition-colors" />
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Drop a file here or click to browse</p>
                 <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF, MP4, WebM, MOV</p>
               </div>
             )}
@@ -109,7 +119,7 @@ export default function Playground() {
         <button
           onClick={runModeration}
           disabled={!file || !selectedKey || loading}
-          className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white py-3 rounded-xl font-medium text-sm transition-colors"
+          className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white py-3 rounded-lg font-black text-sm transition-colors shadow-lg shadow-brand-600/25"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -120,12 +130,33 @@ export default function Playground() {
         </button>
       </div>
 
+      <aside className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:border-slate-800">
+        <ShieldCheck size={26} className="mb-5 text-brand-400" />
+        <h2 className="text-xl font-black">What gets checked</h2>
+        <div className="mt-5 space-y-4">
+          {[
+            ["Images", "Direct SafeSearch scoring"],
+            ["GIFs", "Sampled frames in parallel"],
+            ["Videos", "Frame extraction up to your cap"],
+          ].map(([title, body]) => (
+            <div key={title} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-3">
+              <FileVideo size={16} className="mt-0.5 text-brand-300" />
+              <div>
+                <div className="text-sm font-black">{title}</div>
+                <div className="text-xs text-slate-400">{body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </aside>
+      </div>
+
       {error && (
         <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl p-4 text-sm">{error}</div>
       )}
 
       {result && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <VerdictBadge decision={result.finalDecision} />
             <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">

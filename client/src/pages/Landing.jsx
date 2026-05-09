@@ -1,395 +1,471 @@
 import { useState } from "react";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { apiGet } from "../lib/api.js";
 import { useTheme } from "../context/ThemeContext.jsx";
-import { Sun, Moon, ArrowRight, Zap, Shield, Globe, Clock } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  Code2,
+  Copy,
+  FileVideo,
+  Gauge,
+  KeyRound,
+  LayoutDashboard,
+  LockKeyhole,
+  Moon,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  UploadCloud,
+  Webhook,
+  Zap,
+} from "lucide-react";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const stagger = (delay = 0.08) => ({
+  hidden: {},
+  show: { transition: { staggerChildren: delay } },
+});
+
+const viewOpts = { once: true, margin: "-80px" };
 
 const CURL_EXAMPLE = `curl -X POST https://mod-x-409486837822.asia-south1.run.app/moderate \\
-  -H "Authorization: Bearer mod_sk_your_key" \\
-  -F "file=@photo.jpg"`;
+  -H "Authorization: Bearer mod_sk_live_..." \\
+  -F "file=@upload.mp4"`;
 
 const JS_EXAMPLE = `const form = new FormData();
-form.append("file", fileInput.files[0]);
+form.append("file", file);
 
 const res = await fetch("https://mod-x-409486837822.asia-south1.run.app/moderate", {
   method: "POST",
-  headers: { Authorization: "Bearer mod_sk_your_key" },
+  headers: { Authorization: \`Bearer \${MODME_API_KEY}\` },
   body: form,
 });
 
-const { finalDecision } = await res.json();
-// "allow" | "flag" | "block"`;
+const result = await res.json();
+if (result.finalDecision === "block") hideUpload();`;
 
 const PYTHON_EXAMPLE = `import requests
 
-with open("photo.jpg", "rb") as f:
-    res = requests.post(
+with open("photo.jpg", "rb") as file:
+    result = requests.post(
         "https://mod-x-409486837822.asia-south1.run.app/moderate",
-        headers={"Authorization": "Bearer mod_sk_your_key"},
-        files={"file": f},
-    )
+        headers={"Authorization": "Bearer mod_sk_live_..."},
+        files={"file": file},
+    ).json()
 
-print(res.json()["finalDecision"])  # "allow" | "flag" | "block"`;
+print(result["finalDecision"])`;
 
-const TABS = ["cURL", "JavaScript", "Python"];
-const CODE  = [CURL_EXAMPLE, JS_EXAMPLE, PYTHON_EXAMPLE];
-const LANGS = ["bash", "javascript", "python"];
+const TABS = [
+  { label: "cURL", code: CURL_EXAMPLE, lang: "bash" },
+  { label: "JavaScript", code: JS_EXAMPLE, lang: "javascript" },
+  { label: "Python", code: PYTHON_EXAMPLE, lang: "python" },
+];
+
+const PIPELINE = [
+  {
+    icon: UploadCloud,
+    title: "One Upload",
+    body: "Accept images, GIFs, WebP, MP4, WebM, and MOV through the same endpoint.",
+  },
+  {
+    icon: Gauge,
+    title: "Fast First Pass",
+    body: "Google Vision handles the clear allow and block cases before costs rise.",
+  },
+  {
+    icon: Sparkles,
+    title: "Gray Zone AI",
+    body: "Only uncertain media is escalated to context-aware review on Vertex AI.",
+  },
+  {
+    icon: Webhook,
+    title: "Ship Decisions",
+    body: "Return allow, flag, or block with scores, reason, latency, and metadata.",
+  },
+];
+
+const USE_CASES = [
+  "Student creator platforms",
+  "Social apps and communities",
+  "Course uploads and LMS tools",
+  "Marketplaces with media reviews",
+  "Chat apps with image sharing",
+  "UGC games and avatars",
+];
+
+const PLANS = [
+  {
+    name: "Launch",
+    price: "$0",
+    period: "to start",
+    limit: "100 requests / hour",
+    cta: "Create free API key",
+    featured: false,
+    features: ["Image, GIF, and video moderation", "API keys and playground", "Usage analytics", "Google Vision fast path"],
+  },
+  {
+    name: "Scale",
+    price: "$29",
+    period: "/ month",
+    limit: "1,000 requests / hour",
+    cta: "Start Scale",
+    featured: true,
+    features: ["Higher rate limits", "Gray-zone AI escalation", "Webhook callbacks", "Priority support"],
+  },
+  {
+    name: "Platform",
+    price: "Custom",
+    period: "",
+    limit: "Custom limits and SLA",
+    cta: "Talk to us",
+    featured: false,
+    features: ["Dedicated thresholds", "Human review exports", "Private deployment help", "Volume pricing"],
+  },
+];
 
 function CodeBlock({ code, lang }) {
   const [copied, setCopied] = useState(false);
   function copy() {
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(code).catch(() => {});
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1800);
   }
+
   return (
-    <div className="rounded-xl bg-gray-950 border border-gray-800 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
-        <span className="text-xs text-gray-500 font-mono">{lang}</span>
-        <button onClick={copy} className="text-xs text-gray-400 hover:text-white transition-colors">
-          {copied ? "✓ Copied" : "Copy"}
+    <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/20">
+      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
+        <span className="font-mono text-xs text-slate-400">{lang}</span>
+        <button
+          onClick={copy}
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+        >
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="p-4 text-sm text-gray-300 overflow-x-auto font-mono leading-relaxed whitespace-pre">{code}</pre>
+      <pre className="overflow-x-auto p-5 font-mono text-sm leading-7 text-slate-200">{code}</pre>
     </div>
   );
 }
 
-const DEMO_RESULT = {
-  decision: "allow",
-  scores: { adult: 5, violence: 5, racy: 12 },
-  layer: "Google Vision",
-  ms: 312,
-};
+function DecisionRow({ status, label, layer, ms, tone }) {
+  const tones = {
+    allow: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+    flag: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300",
+    block: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300",
+  };
+
+  return (
+    <div className="decision-row-animate grid grid-cols-[88px_1fr_auto] items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 dark:border-slate-800">
+      <span className={`rounded-md border px-2 py-1 text-center text-xs font-extrabold uppercase ${tones[tone]}`}>{status}</span>
+      <div className="min-w-0">
+        <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">{label}</div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">{layer}</div>
+      </div>
+      <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{ms}ms</span>
+    </div>
+  );
+}
+
+function ProductConsole() {
+  return (
+    <div className="product-frame landing-console">
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+            <ShieldCheck size={16} />
+          </div>
+          <div>
+            <div className="text-sm font-extrabold text-slate-950 dark:text-white">Moderation Console</div>
+            <div className="text-xs text-slate-500">Live product surface</div>
+          </div>
+        </div>
+        <span className="console-status rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+          API online
+        </span>
+      </div>
+
+      <div className="grid gap-0 md:grid-cols-[1fr_220px]">
+        <div className="border-b border-slate-200 p-5 dark:border-slate-800 md:border-b-0 md:border-r">
+          <div className="mb-4 grid grid-cols-3 gap-3">
+            {[
+              ["312ms", "median latency"],
+              ["15%", "AI escalated"],
+              ["3", "media types"],
+            ].map(([value, label]) => (
+              <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+                <div className="text-xl font-extrabold text-slate-950 dark:text-white">{value}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+            <DecisionRow status="allow" label="profile-photo.jpeg" layer="Google Vision fast path" ms="287" tone="allow" />
+            <DecisionRow status="flag" label="student-short.mp4" layer="Vertex AI gray-zone review" ms="1840" tone="flag" />
+            <DecisionRow status="block" label="chat-upload.gif" layer="Google Vision threshold" ms="341" tone="block" />
+          </div>
+        </div>
+
+        <div className="p-5">
+          <div className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Result payload</div>
+          <div className="space-y-3">
+            {[
+              ["finalDecision", "flag"],
+              ["sourceType", "video"],
+              ["adult", "0.50"],
+              ["racy", "0.75"],
+              ["layer", "claude_vertex"],
+            ].map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between gap-3">
+                <span className="font-mono text-xs text-slate-500">{key}</span>
+                <span className="payload-pill rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-100">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            Uncertain content is flagged instead of silently approved.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Landing() {
   const { theme, toggleTheme } = useTheme();
-  const [tab, setTab] = useState(0);
-  const [demoFile, setDemoFile] = useState(null);
-  const [demoRunning, setDemoRunning] = useState(false);
-  const [demoResult, setDemoResult] = useState(null);
+  const [tab, setTab] = useState(1);
+  const [navScrolled, setNavScrolled] = useState(false);
+  const { scrollY } = useScroll();
 
-  function runDemo(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setDemoFile(f);
-    setDemoRunning(true);
-    setDemoResult(null);
-    setTimeout(() => {
-      setDemoRunning(false);
-      setDemoResult(DEMO_RESULT);
-    }, 1400);
-  }
+  useMotionValueEvent(scrollY, "change", (v) => setNavScrolled(v > 10));
+
+  const { data: user } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => apiGet("/api/me"),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const primaryHref = user ? "/dashboard" : "/auth/google";
+  const primaryLabel = user ? "Open Dashboard" : "Get API Key";
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
-
-      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white font-black text-sm">M</div>
-            <span className="font-bold text-gray-900 dark:text-white">ModMe</span>
-          </div>
-          <div className="flex items-center gap-5 text-sm">
-            <a href="#how-it-works" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors hidden md:block">How it works</a>
-            <a href="/docs"         className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors hidden md:block">Docs</a>
-            <a href="#pricing"      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors hidden md:block">Pricing</a>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {theme === "dark" ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
+    <div className="min-h-screen overflow-x-hidden bg-stone-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100">
+      <nav className={`sticky top-0 z-40 border-b transition-colors ${navScrolled ? "border-slate-200 bg-stone-50/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95" : "border-transparent bg-transparent"}`}>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6">
+          <a href="/" className="flex items-center gap-3" aria-label="ModMe home">
+            <img src="/logom.png" alt="ModMe" className="h-8 w-auto object-contain" />
+            <span className="hidden rounded-md border border-slate-200 px-2 py-1 text-xs font-bold text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:inline-flex">
+              Moderation API
+            </span>
+          </a>
+          <div className="flex items-center gap-2 sm:gap-5">
+            <a href="#product" className="hidden text-sm font-semibold text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white md:block">Product</a>
+            <a href="/docs" className="hidden text-sm font-semibold text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white md:block">Docs</a>
+            <a href="#pricing" className="hidden text-sm font-semibold text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white md:block">Pricing</a>
+            <button onClick={toggleTheme} className="icon-btn" aria-label="Toggle theme">
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <a
-              href="/auth/google"
-              className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
-            >
-              Get started free
+            <a href={primaryHref} className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-slate-950/10 transition-transform hover:-translate-y-0.5 dark:bg-white dark:text-slate-950">
+              {user ? <LayoutDashboard size={16} /> : <KeyRound size={16} />}
+              {primaryLabel}
             </a>
           </div>
         </div>
       </nav>
 
-      {/* ── Hero ────────────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 rounded-full px-4 py-1.5 text-xs text-brand-700 dark:text-brand-300 mb-8 font-medium">
-          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse" />
-          Powered by Google Vision + Claude on Vertex AI
-        </div>
-        <h1 className="text-5xl md:text-7xl font-black leading-[1.05] mb-6 tracking-tight">
-          Content Moderation<br />
-          <span className="text-brand-600 dark:text-brand-400">that just works.</span>
-        </h1>
-        <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          One API endpoint. Drop in any image, GIF, or video — get back
-          <span className="text-gray-900 dark:text-white font-medium"> allow / flag / block</span> in under 400ms.
-          Two-layer AI. Dead simple integration.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a
-            href="/auth/google"
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-7 py-3.5 rounded-xl font-semibold text-base transition-colors shadow-lg shadow-brand-600/25"
-          >
-            Start for free <ArrowRight size={16} />
-          </a>
-          <a
-            href="/docs"
-            className="flex items-center gap-2 border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-7 py-3.5 rounded-xl font-semibold text-base transition-colors"
-          >
-            View API docs
-          </a>
-        </div>
+      <main>
+        <section className="relative mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:py-16">
+          <motion.div variants={stagger()} initial="hidden" animate="show" className="flex flex-col justify-center">
+            <motion.div variants={fadeUp} className="mb-6 inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+              <BadgeCheck size={14} className="text-brand-600" />
+              Plug-and-play media safety
+            </motion.div>
+            <motion.h1 variants={fadeUp} className="max-w-4xl text-5xl font-extrabold leading-[0.98] tracking-normal text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
+              Protect uploads with one moderation API.
+            </motion.h1>
+            <motion.p variants={fadeUp} className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+              ModMe gives apps a single endpoint for images, GIFs, and videos. Google Vision makes the fast call, Vertex AI handles the gray zone, and your product gets a clean allow, flag, or block response.
+            </motion.p>
+            <motion.div variants={fadeUp} className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href={primaryHref} className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3.5 text-sm font-extrabold text-white shadow-xl shadow-brand-600/20 transition-colors hover:bg-brand-700">
+                {primaryLabel}
+                <ArrowRight size={17} />
+              </a>
+              <a href="/docs" className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-6 py-3.5 text-sm font-extrabold text-slate-900 transition-colors hover:border-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:border-slate-400">
+                View API Docs
+                <ChevronRight size={17} />
+              </a>
+            </motion.div>
+            <motion.div variants={fadeUp} className="mt-8 grid max-w-xl grid-cols-3 divide-x divide-slate-200 border-y border-slate-200 py-4 dark:divide-slate-800 dark:border-slate-800">
+              {[
+                ["<400ms", "fast path"],
+                ["~15%", "AI review"],
+                ["100MB", "uploads"],
+              ].map(([value, label]) => (
+                <div key={label} className="px-4 first:pl-0">
+                  <div className="text-xl font-extrabold text-slate-950 dark:text-white">{value}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap items-center justify-center gap-10 mt-16">
-          {[
-            { icon: Clock,  value: "< 400ms",   label: "avg response" },
-            { icon: Zap,    value: "99.9%",      label: "uptime" },
-            { icon: Shield, value: "2-layer AI", label: "Vision + Claude" },
-            { icon: Globe,  value: "3 types",    label: "image · GIF · video" },
-          ].map(({ icon: Icon, value, label }) => (
-            <div key={label} className="text-center">
-              <div className="flex items-center justify-center gap-1.5 text-2xl font-black text-gray-900 dark:text-white mb-0.5">
-                <Icon size={18} className="text-brand-500" />
-                {value}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.65, ease: [0.22, 1, 0.36, 1] }} className="relative">
+            <ProductConsole />
+          </motion.div>
+        </section>
 
-      {/* ── How it works ────────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="bg-gray-50 dark:bg-gray-900/50 border-y border-gray-200 dark:border-gray-800 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3">How it works</h2>
-            <p className="text-gray-500 dark:text-gray-400">Two-layer AI — fast, accurate, and cost-efficient by design</p>
+        <section id="product" className="border-y border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6">
+            <motion.div variants={stagger()} initial="hidden" whileInView="show" viewport={viewOpts} className="grid gap-6 md:grid-cols-4">
+              {PIPELINE.map(({ icon: Icon, title, body }) => (
+                <motion.div key={title} variants={fadeUp} className="rounded-lg border border-slate-200 bg-stone-50 p-5 dark:border-slate-800 dark:bg-slate-950">
+                  <Icon size={22} className="mb-5 text-brand-600" />
+                  <h2 className="text-base font-extrabold text-slate-950 dark:text-white">{title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">{body}</p>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { step: "01", icon: "📤", title: "Upload",         desc: "POST any image, GIF, or video to /moderate with your Bearer token. Up to 100 MB." },
-              { step: "02", icon: "🔍", title: "Google Vision",  desc: "SafeSearch scores adult, violence, and racy content across all frames in parallel." },
-              { step: "03", icon: "🤖", title: "Claude AI",      desc: "Only ~15% of content reaches Claude — keeping your costs low while staying accurate." },
-              { step: "04", icon: "✅", title: "Decision",       desc: "Get allow / flag / block with scores, the deciding layer, and full latency breakdown." },
-            ].map(({ step, icon, title, desc }) => (
-              <div key={step} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 relative overflow-hidden">
-                <div className="absolute top-4 right-4 text-gray-100 dark:text-gray-800 font-black text-4xl select-none">{step}</div>
-                <div className="text-3xl mb-4">{icon}</div>
-                <div className="font-bold text-gray-900 dark:text-white mb-2">{title}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</div>
+        </section>
+
+        <section className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <motion.div variants={stagger()} initial="hidden" whileInView="show" viewport={viewOpts}>
+            <motion.div variants={fadeUp} className="mb-4 text-xs font-extrabold uppercase tracking-[0.18em] text-brand-700 dark:text-brand-400">Developer experience</motion.div>
+            <motion.h2 variants={fadeUp} className="text-4xl font-extrabold leading-tight text-slate-950 dark:text-white sm:text-5xl">
+              Your users upload media. Your app gets a verdict.
+            </motion.h2>
+            <motion.p variants={fadeUp} className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
+              The product is built as dependable infrastructure: API keys, rate limits, analytics, playground testing, and response payloads your customers can trust.
+            </motion.p>
+            <motion.div variants={fadeUp} className="mt-8 grid gap-3 sm:grid-cols-2">
+              {USE_CASES.map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+                  <CheckCircle2 size={16} className="text-emerald-500" />
+                  {item}
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={viewOpts}>
+            <div className="mb-3 flex gap-2">
+              {TABS.map((item, idx) => (
+                <button
+                  key={item.label}
+                  onClick={() => setTab(idx)}
+                  className={`rounded-md px-4 py-2 text-xs font-extrabold transition-colors ${tab === idx ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950" : "border border-slate-200 bg-white text-slate-500 hover:text-slate-950 dark:border-slate-800 dark:bg-slate-900 dark:hover:text-white"}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <CodeBlock code={TABS[tab].code} lang={TABS[tab].lang} />
+          </motion.div>
+        </section>
+
+        <section className="bg-slate-950 py-20 text-white">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6">
+            <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+              <div>
+                <div className="mb-4 text-xs font-extrabold uppercase tracking-[0.18em] text-brand-400">Why teams choose it</div>
+                <h2 className="text-4xl font-extrabold leading-tight sm:text-5xl">A moderation layer that feels like infrastructure, not a script.</h2>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  [LockKeyhole, "API key control", "Create, revoke, and separate keys for production and testing."],
+                  [BarChart3, "Usage analytics", "Track requests, blocked media, flagged media, and pass rate."],
+                  [Clock3, "Cost discipline", "Avoid expensive AI calls when Vision can make a clear decision."],
+                  [FileVideo, "Video ready", "Extract frames from GIFs and videos before scoring the worst moments."],
+                  [Code2, "Simple payloads", "Return decisions developers can wire into product workflows immediately."],
+                  [Zap, "Review queue ready", "Flag uncertain content for human review instead of risking approvals."],
+                ].map(([Icon, title, body]) => (
+                  <div key={title} className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+                    <Icon size={20} className="mb-4 text-brand-400" />
+                    <div className="font-extrabold">{title}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="mx-auto max-w-7xl px-5 py-20 sm:px-6">
+          <div className="mb-10 max-w-2xl">
+            <div className="mb-4 text-xs font-extrabold uppercase tracking-[0.18em] text-brand-700 dark:text-brand-400">Pricing</div>
+            <h2 className="text-4xl font-extrabold text-slate-950 dark:text-white sm:text-5xl">Start free, scale when traffic grows.</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600 dark:text-slate-300">Clear plans for prototypes, production apps, and larger platforms with custom limits.</p>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-3">
+            {PLANS.map((plan) => (
+              <div key={plan.name} className={`rounded-lg border p-6 ${plan.featured ? "border-brand-500 bg-brand-50 shadow-2xl shadow-brand-600/10 dark:bg-brand-950/20" : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">{plan.name}</h3>
+                  {plan.featured && <span className="rounded-md bg-brand-600 px-2 py-1 text-xs font-extrabold text-white">Best value</span>}
+                </div>
+                <div className="mt-5">
+                  <span className="text-5xl font-extrabold text-slate-950 dark:text-white">{plan.price}</span>
+                  <span className="ml-1 text-sm font-semibold text-slate-500">{plan.period}</span>
+                </div>
+                <div className="mt-3 text-sm font-bold text-brand-700 dark:text-brand-300">{plan.limit}</div>
+                <ul className="mt-6 space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                      <Check size={16} className="text-emerald-500" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <a href={plan.name === "Launch" ? primaryHref : `/checkout?plan=${plan.name.toLowerCase()}`} className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-extrabold transition-colors ${plan.featured ? "bg-brand-600 text-white hover:bg-brand-700" : "border border-slate-300 text-slate-900 hover:border-slate-950 dark:border-slate-700 dark:text-white dark:hover:border-slate-400"}`}>
+                  {plan.cta}
+                  <ArrowRight size={16} />
+                </a>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Live Playground Preview ──────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3">Try it instantly</h2>
-          <p className="text-gray-500 dark:text-gray-400">See the moderation pipeline in action — no signup required for this demo</p>
-        </div>
-
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl dark:shadow-none">
-            {/* Browser toolbar */}
-            <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-              </div>
-              <div className="flex-1 mx-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-1 text-xs text-gray-400 font-mono">
-                POST /moderate
-              </div>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Drop zone */}
-              <label className="block border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-10 text-center cursor-pointer hover:border-brand-400 dark:hover:border-brand-600 transition-colors group">
-                {demoFile ? (
-                  <div>
-                    <div className="text-3xl mb-2">📎</div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{demoFile.name}</p>
-                    <p className="text-xs text-gray-400 mt-1">{(demoFile.size / 1024).toFixed(1)} KB · {demoFile.type}</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">☁️</div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drop an image here or click to browse</p>
-                    <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF · Max 10 MB for demo</p>
-                  </div>
-                )}
-                <input type="file" className="hidden" accept="image/*" onChange={runDemo} />
-              </label>
-
-              {/* Simulated running state */}
-              {demoRunning && (
-                <div className="flex items-center gap-3 bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-800 rounded-xl p-4">
-                  <div className="w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full animate-spin shrink-0" />
-                  <p className="text-sm text-brand-700 dark:text-brand-300">Running moderation pipeline...</p>
-                </div>
-              )}
-
-              {/* Simulated result */}
-              {demoResult && !demoRunning && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-4 py-2 rounded-full font-bold text-sm">
-                      ✅ ALLOWED
-                    </span>
-                    <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">via Google Vision · {demoResult.ms}ms</span>
-                  </div>
-                  <div className="space-y-2">
-                    {[["Adult", demoResult.scores.adult], ["Violence", demoResult.scores.violence], ["Racy", demoResult.scores.racy]].map(([label, pct]) => (
-                      <div key={label} className="flex items-center gap-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 w-20 shrink-0">{label}</span>
-                        <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-2">
-                          <div className="h-2 rounded-full bg-green-500" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-sm font-mono text-gray-700 dark:text-gray-300 w-10 text-right">{pct}%</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 text-center">
-                    This is a simulated demo.{" "}
-                    <a href="/auth/google" className="text-brand-600 dark:text-brand-400 hover:underline">Sign in</a>
-                    {" "}to use the live playground with your own API keys.
-                  </p>
-                </div>
-              )}
-
-              {!demoFile && !demoRunning && !demoResult && (
-                <div className="text-center">
-                  <a
-                    href="/auth/google"
-                    className="inline-flex items-center gap-2 text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium"
-                  >
-                    Or sign in to use the live playground with real moderation <ArrowRight size={14} />
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Code Examples ───────────────────────────────────────────────────── */}
-      <section className="bg-gray-50 dark:bg-gray-900/50 border-y border-gray-200 dark:border-gray-800 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <section className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-5 sm:px-6 lg:flex-row lg:items-center">
             <div>
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4">Integrate in minutes</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-8">One endpoint, any language. Works with anything that can send an HTTP request.</p>
-              <div className="space-y-4">
-                {[
-                  { n: "1", title: "Sign in with Google",    body: "Free account — no credit card needed." },
-                  { n: "2", title: "Create an API key",      body: "Dashboard → New Key. Starts with mod_sk_." },
-                  { n: "3", title: "POST to /moderate",      body: "Send any image, GIF, or video as multipart form data." },
-                  { n: "4", title: "Read the decision",      body: 'finalDecision is "allow", "flag", or "block".' },
-                ].map(({ n, title, body }) => (
-                  <div key={n} className="flex gap-4">
-                    <div className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">{n}</div>
-                    <div>
-                      <div className="font-semibold text-gray-900 dark:text-white text-sm">{title}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{body}</div>
-                    </div>
-                  </div>
-                ))}
+              <div className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-950 dark:text-white">
+                <Activity size={16} className="text-brand-600" />
+                Ready for launch
               </div>
-              <div className="mt-8 flex gap-3">
-                <a href="/auth/google" className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors">
-                  Get your API key
-                </a>
-                <a href="/docs" className="border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors">
-                  Full API docs
-                </a>
-              </div>
+              <h2 className="max-w-3xl text-3xl font-extrabold leading-tight text-slate-950 dark:text-white sm:text-4xl">
+                Give your product a moderation API developers can understand in one minute and integrate in five.
+              </h2>
             </div>
-            <div>
-              <div className="flex gap-1 mb-3">
-                {TABS.map((t, i) => (
-                  <button
-                    key={t}
-                    onClick={() => setTab(i)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${tab === i ? "bg-brand-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <CodeBlock code={CODE[tab]} lang={LANGS[tab]} />
-            </div>
+            <a href={primaryHref} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-950 px-6 py-3.5 text-sm font-extrabold text-white dark:bg-white dark:text-slate-950">
+              {primaryLabel}
+              <ArrowRight size={17} />
+            </a>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* ── Pricing ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3">Simple pricing</h2>
-          <p className="text-gray-500 dark:text-gray-400">Start free, upgrade when you need more</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {[
-            {
-              name: "Free", price: "$0", period: "forever", limit: "100 req / hour",
-              features: ["All file types (image, GIF, video)", "Google Vision + Claude AI", "Usage analytics dashboard", "Interactive playground", "Instant key revocation"],
-              cta: "Get started free", highlight: false,
-            },
-            {
-              name: "Pro", price: "$29", period: "/ month", limit: "1,000 req / hour",
-              features: ["Everything in Free", "10× higher rate limit", "Priority support", "99.9% SLA", "Custom webhook callbacks"],
-              cta: "Upgrade to Pro", highlight: true,
-            },
-          ].map(({ name, price, period, limit, features, cta, highlight }) => (
-            <div
-              key={name}
-              className={`rounded-2xl p-7 border ${highlight
-                ? "border-brand-500 bg-brand-50 dark:bg-brand-950/20"
-                : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"}`}
-            >
-              {highlight && (
-                <div className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-3">Most popular</div>
-              )}
-              <div className="font-bold text-gray-900 dark:text-white text-lg mb-1">{name}</div>
-              <div className="mb-1">
-                <span className="text-4xl font-black text-gray-900 dark:text-white">{price}</span>
-                <span className="text-gray-400 text-sm ml-1">{period}</span>
-              </div>
-              <div className="text-brand-600 dark:text-brand-400 text-sm font-medium mb-6">{limit}</div>
-              <ul className="space-y-2.5 mb-7">
-                {features.map(f => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-400">
-                    <span className="text-green-500 mt-0.5 shrink-0">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="/auth/google"
-                className={`block text-center py-3 rounded-xl text-sm font-semibold transition-colors ${highlight
-                  ? "bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-600/25"
-                  : "border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600"}`}
-              >
-                {cta}
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-brand-600 flex items-center justify-center text-white font-black text-xs">M</div>
-            <span className="font-bold text-gray-700 dark:text-gray-300">ModMe</span>
-          </div>
-          <p className="text-sm text-gray-400">Content Moderation API · Powered by Google Cloud Vision &amp; Anthropic Claude</p>
-          <div className="flex items-center gap-5 text-sm">
-            <a href="/docs"        className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">API Docs</a>
-            <a href="/auth/google" className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Sign in</a>
+      <footer className="border-t border-slate-200 py-8 dark:border-slate-800">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 text-sm text-slate-500 dark:text-slate-400 sm:px-6 md:flex-row">
+          <img src="/logom.png" alt="ModMe" className="h-7 w-auto object-contain" />
+          <span>Content Moderation API for images, GIFs, and videos.</span>
+          <div className="flex items-center gap-5">
+            <a href="/docs" className="font-semibold hover:text-slate-950 dark:hover:text-white">Docs</a>
+            <a href="#pricing" className="font-semibold hover:text-slate-950 dark:hover:text-white">Pricing</a>
           </div>
         </div>
       </footer>
