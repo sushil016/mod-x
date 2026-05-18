@@ -28,7 +28,7 @@ export default function KeyCard({ k }) {
   const isExpired = k.expires_at && new Date(k.expires_at) < new Date();
 
   return (
-    <div className={`border rounded-xl p-5 flex flex-col gap-3 ${isExpired ? "opacity-50" : "bg-white"}`}>
+    <div className={`border border-border rounded-xl p-5 flex flex-col gap-3 ${isExpired ? "opacity-50" : "bg-card text-card-foreground"}`}>
       <div className="flex items-center justify-between">
         {editing ? (
           <input
@@ -39,21 +39,21 @@ export default function KeyCard({ k }) {
             autoFocus
           />
         ) : (
-          <span className="font-semibold text-gray-800">{k.name}</span>
+          <span className="font-semibold text-card-foreground">{k.name}</span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${k.is_active && !isExpired ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${k.is_active && !isExpired ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
           {isExpired ? "Expired" : k.is_active ? "Active" : "Revoked"}
         </span>
       </div>
 
-      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-        <code className="text-xs text-gray-600 flex-1 truncate">{k.key}</code>
+      <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
+        <code className="text-xs text-muted-foreground flex-1 truncate">{k.key}</code>
         <button onClick={copy} className="text-xs text-brand-600 hover:text-brand-700 font-medium shrink-0">
           {copied ? "Copied!" : "Copy"}
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Created {new Date(k.created_at).toLocaleDateString()}</span>
         {k.last_used_at && <span>Last used {new Date(k.last_used_at).toLocaleDateString()}</span>}
         {k.expires_at && <span>Expires {new Date(k.expires_at).toLocaleDateString()}</span>}
@@ -63,11 +63,11 @@ export default function KeyCard({ k }) {
         {editing ? (
           <>
             <button onClick={() => rename.mutate()} className="text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700">Save</button>
-            <button onClick={() => setEditing(false)} className="text-xs text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-100">Cancel</button>
+            <button onClick={() => setEditing(false)} className="text-xs text-muted-foreground px-3 py-1.5 rounded-lg hover:bg-accent">Cancel</button>
           </>
         ) : (
           <>
-            <button onClick={() => setEditing(true)} className="text-xs text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-100">Rename</button>
+            <button onClick={() => setEditing(true)} className="text-xs text-muted-foreground px-3 py-1.5 rounded-lg hover:bg-accent">Rename</button>
             <button onClick={() => revoke.mutate()} className="text-xs text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50">Revoke</button>
           </>
         )}

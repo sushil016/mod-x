@@ -32,23 +32,23 @@ function formatExpiry(value) {
 
 function Completion({ plan, result }) {
   return (
-    <div className="mx-auto max-w-3xl rounded-lg border border-emerald-200 bg-white p-8 text-center shadow-2xl shadow-emerald-950/5 dark:border-emerald-900/50 dark:bg-slate-900">
+    <div className="mx-auto max-w-3xl rounded-lg border border-emerald-200 bg-card p-8 text-center shadow-2xl shadow-emerald-950/5 dark:border-emerald-900/50 ">
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
         <BadgeCheck size={32} />
       </div>
-      <h1 className="text-3xl font-black text-slate-950 dark:text-white">Payment verified</h1>
-      <p className="mt-3 text-slate-600 dark:text-slate-300">
+      <h1 className="text-3xl font-black text-foreground">Payment verified</h1>
+      <p className="mt-3 text-muted-foreground">
         Your account is now on the {plan.name} plan. Card ending in {result?.checkout?.card_last4} was recorded as paid.
       </p>
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         {["Plan updated", "Billing event saved", "API limits unlocked"].map((item) => (
-          <div key={item} className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+          <div key={item} className="rounded-lg border border-border bg-secondary p-4 text-sm font-medium text-foreground">
             <Check size={16} className="mx-auto mb-2 text-emerald-500" />
             {item}
           </div>
         ))}
       </div>
-      <a href="/dashboard" className="mt-8 inline-flex items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-black text-white dark:bg-white dark:text-slate-950">
+      <a href="/dashboard" className="mt-8 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-black text-primary-foreground">
         Open Dashboard
       </a>
     </div>
@@ -60,6 +60,7 @@ export default function Checkout() {
   const params = new URLSearchParams(window.location.search);
   const selectedPlan = params.get("plan") === "platform" ? "platform" : "scale";
   const plan = PLAN_DETAILS[selectedPlan];
+  const authHref = import.meta.env.DEV ? "/auth/dev-login" : "/auth/google";
   const [complete, setComplete] = useState(null);
   const [form, setForm] = useState({
     billingEmail: "",
@@ -99,7 +100,7 @@ export default function Checkout() {
 
   if (complete) {
     return (
-      <div className="min-h-screen bg-stone-50 px-5 py-10 dark:bg-slate-950">
+      <div className="min-h-screen bg-background px-5 py-10">
         <Completion plan={plan} result={complete} />
       </div>
     );
@@ -107,83 +108,89 @@ export default function Checkout() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-stone-50 px-5 py-10 dark:bg-slate-950">
-        <div className="mx-auto max-w-lg rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-          <img src="/logom.png" alt="ModMe" className="mx-auto mb-6 h-8 w-auto" />
-          <h1 className="text-2xl font-black text-slate-950 dark:text-white">Sign in to continue checkout</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Your plan and billing record attach to your developer account.</p>
-          <a href="/auth/google" className="mt-6 inline-flex rounded-lg bg-brand-600 px-6 py-3 text-sm font-black text-white">Continue with Google</a>
+      <div className="min-h-screen bg-background px-5 py-10">
+        <div className="mx-auto max-w-lg rounded-lg border border-border bg-card p-8 text-center  ">
+          <div className="mx-auto mb-6 flex items-center justify-center gap-2">
+            <span className="font-display text-2xl leading-none">ModMe</span>
+            <span className="font-mono text-xs text-muted-foreground">API</span>
+          </div>
+          <h1 className="font-display text-3xl text-foreground">Sign in to continue checkout</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">Your plan and billing record attach to your developer account.</p>
+          <a href={authHref} className="mt-6 inline-flex rounded-lg bg-brand-600 px-6 py-3 text-sm font-black text-white">Continue locally</a>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 text-slate-950 dark:bg-slate-950 dark:text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-6">
         <div className="mb-8 flex items-center justify-between">
-          <a href="/" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">
+          <a href="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
             <ArrowLeft size={16} />
             Back
           </a>
-          <img src="/logom.png" alt="ModMe" className="h-8 w-auto" />
+          <div className="flex items-center gap-2">
+            <span className="font-display text-2xl leading-none">ModMe</span>
+            <span className="font-mono text-xs text-muted-foreground">API</span>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-950/5 dark:border-slate-800 dark:bg-slate-900">
+          <section className="app-panel p-6 shadow-2xl shadow-foreground/5">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                 <CreditCard size={22} />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-slate-950 dark:text-white">Secure checkout</h1>
-                <p className="text-sm text-slate-500">Test card ready: 4242 4242 4242 4242</p>
+                <h1 className="font-display text-3xl text-foreground">Secure checkout</h1>
+                <p className="text-sm text-muted-foreground">Test card ready: 4242 4242 4242 4242</p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="sm:col-span-2">
-                <span className="mb-1.5 block text-sm font-bold text-slate-700 dark:text-slate-300">Billing email</span>
+                <span className="mb-1.5 block text-sm font-bold text-card-foreground">Billing email</span>
                 <input
                   value={form.billingEmail || user?.email || ""}
                   onChange={(e) => update("billingEmail", e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-colors focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950"
+                  className="field-control"
                 />
               </label>
               <label className="sm:col-span-2">
-                <span className="mb-1.5 block text-sm font-bold text-slate-700 dark:text-slate-300">Cardholder name</span>
+                <span className="mb-1.5 block text-sm font-bold text-card-foreground">Cardholder name</span>
                 <input
                   value={form.cardName}
                   onChange={(e) => update("cardName", e.target.value)}
                   placeholder="Sushil Sahani"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-colors focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950"
+                  className="field-control"
                 />
               </label>
               <label className="sm:col-span-2">
-                <span className="mb-1.5 block text-sm font-bold text-slate-700 dark:text-slate-300">Card number</span>
+                <span className="mb-1.5 block text-sm font-bold text-card-foreground">Card number</span>
                 <input
                   value={form.cardNumber}
                   onChange={(e) => update("cardNumber", formatCard(e.target.value))}
                   inputMode="numeric"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950"
+                  className="field-control font-mono"
                 />
               </label>
               <label>
-                <span className="mb-1.5 block text-sm font-bold text-slate-700 dark:text-slate-300">Expiry</span>
+                <span className="mb-1.5 block text-sm font-bold text-card-foreground">Expiry</span>
                 <input
                   value={form.expiry}
                   onChange={(e) => update("expiry", formatExpiry(e.target.value))}
                   inputMode="numeric"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950"
+                  className="field-control font-mono"
                 />
               </label>
               <label>
-                <span className="mb-1.5 block text-sm font-bold text-slate-700 dark:text-slate-300">CVC</span>
+                <span className="mb-1.5 block text-sm font-bold text-card-foreground">CVC</span>
                 <input
                   value={form.cvc}
                   onChange={(e) => update("cvc", e.target.value.replace(/\D/g, "").slice(0, 4))}
                   inputMode="numeric"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm outline-none transition-colors focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950"
+                  className="field-control font-mono"
                 />
               </label>
             </div>
@@ -197,13 +204,13 @@ export default function Checkout() {
             <button
               onClick={() => checkout.mutate()}
               disabled={checkout.isPending || !form.cardName.trim()}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3.5 text-sm font-black text-white shadow-xl shadow-brand-600/20 transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="solid-button mt-6 w-full gap-2 py-3.5 disabled:opacity-50"
             >
               {checkout.isPending ? "Verifying payment..." : `Pay $${plan.price} and activate ${plan.name}`}
             </button>
           </section>
 
-          <aside className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/20 dark:border-slate-800">
+          <aside className="rounded-lg border border-border bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/20 ">
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-300">Plan</p>

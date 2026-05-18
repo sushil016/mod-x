@@ -1,14 +1,22 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const COLORS = { allow: "#22c55e", flag: "#f59e0b", block: "#ef4444" };
+const tooltipStyle = {
+  background: "var(--popover)",
+  color: "var(--popover-foreground)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius)",
+  fontSize: "12px",
+};
+const mutedTick = "var(--muted-foreground)";
 
 export function DailyLineChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={data}>
-        <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#9ca3af" }} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-        <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", fontSize: "12px" }} />
+        <XAxis dataKey="date" tick={{ fontSize: 11, fill: mutedTick }} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: mutedTick }} axisLine={false} tickLine={false} />
+        <Tooltip contentStyle={tooltipStyle} />
         <Line type="monotone" dataKey="count" stroke="#FF5F1F" strokeWidth={2.5} dot={false} />
       </LineChart>
     </ResponsiveContainer>
@@ -23,8 +31,8 @@ export function DecisionDonut({ data }) {
         <Pie data={formatted} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3}>
           {formatted.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
         </Pie>
-        <Legend iconType="circle" iconSize={8} formatter={v => <span style={{ fontSize: "12px", color: "#9ca3af" }}>{v}</span>} />
-        <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", fontSize: "12px" }} />
+        <Legend iconType="circle" iconSize={8} formatter={v => <span style={{ fontSize: "12px", color: mutedTick }}>{v}</span>} />
+        <Tooltip contentStyle={tooltipStyle} />
       </PieChart>
     </ResponsiveContainer>
   );

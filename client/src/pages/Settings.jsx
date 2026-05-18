@@ -10,19 +10,19 @@ import {
 /* ── Section wrapper ───────────────────────────────────────────────────────── */
 function Section({ title, description, children, danger = false }) {
   return (
-    <div className={`bg-white dark:bg-gray-900 border rounded-2xl overflow-hidden ${danger
+    <div className={`overflow-hidden rounded-lg border bg-card ${danger
       ? "border-red-200 dark:border-red-900/50"
-      : "border-gray-200 dark:border-gray-800"}`}
+      : "border-border"}`}
     >
       <div className={`px-6 py-5 border-b ${danger
         ? "border-red-100 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20"
-        : "border-gray-100 dark:border-gray-800"}`}
+        : "border-border"}`}
       >
-        <h2 className={`font-bold text-base ${danger ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>
+        <h2 className={`font-bold text-base ${danger ? "text-red-700 dark:text-red-400" : "text-foreground"}`}>
           {title}
         </h2>
         {description && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
         )}
       </div>
       <div className="p-6">{children}</div>
@@ -34,9 +34,9 @@ function Section({ title, description, children, danger = false }) {
 function Field({ label, hint, children }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="block text-sm font-medium text-card-foreground">{label}</label>
       {children}
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -127,22 +127,22 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-brand-700 dark:text-brand-400">Account controls</div>
-        <h1 className="text-3xl font-black text-slate-950 dark:text-white">Settings</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Manage profile, plan, appearance, and security for your moderation workspace.</p>
+      <div className="editorial-banner">
+        <div className="app-kicker">Account controls</div>
+        <h1 className="app-title">Settings</h1>
+        <p className="app-copy">Manage profile, plan, appearance, and security for your moderation workspace.</p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-lg p-1 overflow-x-auto">
+      <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-1 overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === id
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-slate-900 dark:hover:text-white"
             } ${id === "danger" && activeTab !== "danger" ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300" : ""}`}
           >
             <Icon size={14} />
@@ -156,7 +156,7 @@ export default function Settings() {
         <div className="space-y-5 animate-fade-in">
           <Section title="Profile" description="Your public-facing identity on ModMe">
             {/* Avatar */}
-            <div className="flex items-center gap-5 mb-7 pb-7 border-b border-gray-100 dark:border-gray-800">
+            <div className="mb-7 flex items-center gap-5 border-b border-border pb-7">
               <div className="relative">
                 <img
                   src={avatarUrl}
@@ -166,12 +166,12 @@ export default function Settings() {
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white dark:border-gray-900" title="Connected" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">{user?.name || user?.email?.split("@")[0]}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{user?.email}</p>
+                <p className="font-semibold text-foreground">{user?.name || user?.email?.split("@")[0]}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
                 <span className={`inline-flex items-center gap-1.5 mt-2 text-xs font-semibold px-2.5 py-1 rounded-full ${
                   user?.plan === "pro"
                     ? "bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                    : "bg-muted text-muted-foreground"
                 }`}>
                   {user?.plan === "pro" && <Crown size={11} />}
                   {user?.plan || "free"} plan
@@ -190,7 +190,7 @@ export default function Settings() {
                       value={displayName}
                       onChange={e => setDisplayName(e.target.value)}
                       placeholder="Your name"
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:border-brand-500 dark:focus:border-brand-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-secondary border border-border dark:border-gray-700 rounded-xl text-sm text-foreground focus:outline-none focus:border-brand-500 dark:focus:border-brand-500 transition-colors"
                     />
                   </div>
                   <button
@@ -210,13 +210,13 @@ export default function Settings() {
                     type="email"
                     value={user?.email || ""}
                     readOnly
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-500 cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-500 cursor-not-allowed"
                   />
                 </div>
               </Field>
 
               <Field label="Joined">
-                <div className="text-sm text-gray-500 dark:text-gray-400 py-2.5">
+                <div className="text-sm text-muted-foreground py-2.5">
                   {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—"}
                 </div>
               </Field>
@@ -231,12 +231,12 @@ export default function Settings() {
                 { icon: Key,       label: "API Keys",       value: stats?.activeKeys ?? "0",                                 color: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40" },
                 { icon: Shield,    label: "Blocked",        value: stats?.summary?.total_blocked?.toLocaleString() ?? "0",   color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40" },
               ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <div key={label} className="text-center p-4 bg-secondary rounded-xl">
                   <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mx-auto mb-2`}>
                     <Icon size={16} />
                   </div>
-                  <div className="text-xl font-black text-gray-900 dark:text-white">{value}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</div>
+                  <div className="text-xl font-black text-foreground">{value}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
                 </div>
               ))}
             </div>
@@ -251,21 +251,21 @@ export default function Settings() {
             <div className={`rounded-2xl p-6 border-2 mb-6 ${
               user?.plan === "pro"
                 ? "border-brand-400 dark:border-brand-500/60 bg-brand-50 dark:bg-brand-950/20"
-                : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
+                : "border-border dark:border-gray-700 bg-secondary/40"
             }`}>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     {user?.plan === "pro" && <Crown size={16} className="text-brand-600 dark:text-brand-400" />}
-                    <span className="font-black text-lg text-gray-900 dark:text-white capitalize">{user?.plan || "free"}</span>
+                    <span className="font-black text-lg text-foreground capitalize">{user?.plan || "free"}</span>
                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">Active</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     {user?.plan === "pro" ? "1,000 requests / hour · Priority support · 99.9% SLA" : "100 requests / hour · Community support"}
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-black text-gray-900 dark:text-white">{user?.plan === "pro" ? "$29" : "$0"}</div>
+                  <div className="text-2xl font-black text-foreground">{user?.plan === "pro" ? "$29" : "$0"}</div>
                   <div className="text-xs text-gray-400">{user?.plan === "pro" ? "/ month" : "forever"}</div>
                 </div>
               </div>
@@ -273,10 +273,10 @@ export default function Settings() {
 
             {user?.plan !== "pro" ? (
               <div className="space-y-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Upgrade to Pro and get:</p>
+                <p className="text-sm font-medium text-card-foreground">Upgrade to Pro and get:</p>
                 <ul className="space-y-2.5">
                   {["10× higher rate limit (1,000 req/hour)", "Priority email support", "99.9% SLA", "Custom webhook callbacks", "Early access to new features"].map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-400">
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-muted-foreground">
                       <CheckCircle size={15} className="text-green-500 shrink-0" /> {f}
                     </li>
                   ))}
@@ -289,9 +289,9 @@ export default function Settings() {
                 </a>
               </div>
             ) : (
-              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div className="flex items-center gap-3 p-4 bg-secondary rounded-xl">
                 <CheckCircle size={16} className="text-green-500 shrink-0" />
-                <p className="text-sm text-gray-700 dark:text-gray-300">You're on the Pro plan. Thank you for your support!</p>
+                <p className="text-sm text-card-foreground">You're on the Pro plan. Thank you for your support!</p>
               </div>
             )}
           </Section>
@@ -305,10 +305,10 @@ export default function Settings() {
                 return (
                   <div key={label}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{used.toLocaleString()} / {limit.toLocaleString()}</span>
+                      <span className="text-sm font-medium text-card-foreground">{label}</span>
+                      <span className="text-sm text-muted-foreground">{used.toLocaleString()} / {limit.toLocaleString()}</span>
                     </div>
-                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-2 rounded-full transition-all duration-700 ${pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-yellow-500" : "bg-brand-500"}`}
                         style={{ width: `${pct}%` }}
@@ -329,7 +329,7 @@ export default function Settings() {
           <Section title="Theme" description="Choose how ModMe looks for you">
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: "light", label: "Light", icon: Sun, preview: "bg-white border-gray-200", text: "text-gray-900", sub: "text-gray-400" },
+                { value: "light", label: "Light", icon: Sun, preview: "bg-card border-border", text: "text-foreground", sub: "text-muted-foreground" },
                 { value: "dark",  label: "Dark",  icon: Moon, preview: "bg-gray-900 border-gray-700", text: "text-white", sub: "text-gray-500" },
               ].map(({ value, label, icon: Icon, preview, text, sub }) => (
                 <button
@@ -337,20 +337,20 @@ export default function Settings() {
                   onClick={() => { if (theme !== value) toggleTheme(); }}
                   className={`relative text-left rounded-2xl border-2 p-4 transition-all ${theme === value
                     ? "border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/20"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"}`}
+                    : "border-border dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"}`}
                 >
                   {/* Mini preview */}
                   <div className={`${preview} border rounded-xl p-3 mb-3 h-20 relative overflow-hidden`}>
                     <div className={`${text} text-xs font-bold mb-1.5`}>Dashboard</div>
                     <div className="space-y-1">
-                      <div className={`${sub} text-[10px] bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 w-16`}>&nbsp;</div>
-                      <div className={`${sub} text-[10px] bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 w-12`}>&nbsp;</div>
+                      <div className={`${sub} text-[10px] bg-muted rounded px-1.5 py-0.5 w-16`}>&nbsp;</div>
+                      <div className={`${sub} text-[10px] bg-muted rounded px-1.5 py-0.5 w-12`}>&nbsp;</div>
                     </div>
                     <div className="absolute bottom-2 right-2 w-8 h-4 bg-brand-500 rounded-md opacity-70" />
                   </div>
                   <div className="flex items-center gap-2">
                     <Icon size={14} className={theme === value ? "text-brand-600 dark:text-brand-400" : "text-gray-400"} />
-                    <span className={`text-sm font-semibold ${theme === value ? "text-brand-600 dark:text-brand-400" : "text-gray-700 dark:text-gray-300"}`}>
+                    <span className={`text-sm font-semibold ${theme === value ? "text-brand-600 dark:text-brand-400" : "text-card-foreground"}`}>
                       {label}
                     </span>
                   </div>
@@ -370,8 +370,8 @@ export default function Settings() {
       {activeTab === "security" && (
         <div className="space-y-5 animate-fade-in">
           <Section title="Authentication" description="How you sign in to ModMe">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-              <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
+            <div className="flex items-center gap-4 p-4 bg-secondary rounded-xl">
+              <div className="w-10 h-10 rounded-xl bg-card dark:bg-gray-700 border border-border dark:border-gray-600 flex items-center justify-center shadow-sm">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -380,8 +380,8 @@ export default function Settings() {
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">Google OAuth</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user?.email}</p>
+                <p className="text-sm font-semibold text-foreground">Google OAuth</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
               </div>
               <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full font-medium">Connected</span>
             </div>
@@ -389,7 +389,7 @@ export default function Settings() {
 
           <Section title="API Keys" description="Revoke keys you no longer need">
             <div className="space-y-3">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Your API keys are managed on the{" "}
                 <a href="/dashboard" className="text-brand-600 dark:text-brand-400 hover:underline font-medium inline-flex items-center gap-1">
                   Dashboard <ExternalLink size={11} />
@@ -412,7 +412,7 @@ export default function Settings() {
 
           <Section title="Session">
             <div className="space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 You are signed in via Google OAuth. Your session is secured with HTTP-only cookies.
               </p>
               <button
@@ -445,15 +445,15 @@ export default function Settings() {
 
               {/* Delete account form */}
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Type <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-red-600 dark:text-red-400">delete my account</code> to confirm:
+                <p className="text-sm font-medium text-card-foreground">
+                  Type <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono text-red-600 dark:text-red-400">delete my account</code> to confirm:
                 </p>
                 <input
                   type="text"
                   value={deleteConfirm}
                   onChange={e => setDeleteConfirm(e.target.value)}
                   placeholder="delete my account"
-                  className="w-full bg-gray-50 dark:bg-gray-800 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500 dark:focus:border-red-500 transition-colors"
+                  className="w-full bg-secondary border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-red-500 dark:focus:border-red-500 transition-colors"
                 />
                 <button
                   onClick={() => { if (deleteConfirm === "delete my account") deleteAccount.mutate(); }}

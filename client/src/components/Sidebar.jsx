@@ -22,14 +22,14 @@ function NavItem({ to, label, icon: Icon, onClick }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
           isActive
-            ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
-            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
+            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         }`
       }
     >
       {({ isActive }) => (
         <>
-          <Icon size={17} className={isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"} />
+          <Icon size={17} className={isActive ? "text-sidebar-primary-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground"} />
           {label}
         </>
       )}
@@ -63,25 +63,24 @@ export default function Sidebar({ isOpen, onClose }) {
     <aside
       className={`
         fixed inset-y-0 left-0 w-64 flex flex-col z-30
-        bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+        bg-sidebar text-sidebar-foreground border-r border-sidebar-border
         transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0
       `}
     >
       {/* Logo row */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between px-5 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          <img src="/logom.png" alt="ModMe" className="h-8 w-auto object-contain shrink-0" />
           <div>
-            <div className="font-bold text-slate-900 dark:text-white text-sm leading-none">ModMe</div>
-            <div className="text-xs text-slate-400 mt-0.5">Moderation API</div>
+            <div className="font-display text-xl leading-none text-foreground">ModMe</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Moderation API</div>
           </div>
         </div>
         {/* Close button — mobile only */}
         <button
           onClick={onClose}
-          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="md:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-sidebar-accent transition-colors"
           aria-label="Close menu"
         >
           <X size={18} />
@@ -95,21 +94,21 @@ export default function Sidebar({ isOpen, onClose }) {
       </nav>
 
       {/* Bottom */}
-      <div className="border-t border-slate-100 dark:border-slate-800 p-3 space-y-0.5">
+      <div className="border-t border-sidebar-border p-3 space-y-0.5">
         <NavLink
           to="/settings"
           onClick={onClose}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
               isActive
-                ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             }`
           }
         >
           {({ isActive }) => (
             <>
-              <Settings size={17} className={isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"} />
+              <Settings size={17} className={isActive ? "text-sidebar-primary-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground"} />
               Settings
             </>
           )}
@@ -117,11 +116,11 @@ export default function Sidebar({ isOpen, onClose }) {
 
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all"
         >
           {theme === "dark"
             ? <Sun size={17} className="text-amber-400" />
-            : <Moon size={17} className="text-gray-400" />}
+            : <Moon size={17} className="text-muted-foreground" />}
           {theme === "dark" ? "Light mode" : "Dark mode"}
         </button>
 
@@ -129,22 +128,22 @@ export default function Sidebar({ isOpen, onClose }) {
           <NavLink
             to="/settings"
             onClick={onClose}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-accent transition-all group"
           >
             <div className="relative shrink-0">
               <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white dark:border-gray-900" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-sidebar" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+              <div className="text-xs font-semibold text-sidebar-foreground truncate">
                 {user.name || user.email.split("@")[0]}
               </div>
-              <div className="text-xs text-gray-400 truncate capitalize">{user.plan || "free"} plan</div>
+              <div className="text-xs text-muted-foreground truncate capitalize">{user.plan || "free"} plan</div>
             </div>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); logout(); }}
               title="Logout"
-              className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-0.5 rounded"
+              className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-0.5 rounded"
             >
               <LogOut size={14} />
             </button>

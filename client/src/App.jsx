@@ -22,7 +22,7 @@ function AuthGuard({ children, adminOnly = false }) {
   });
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -37,7 +37,7 @@ function AppLayout() {
 
   return (
     <AuthGuard>
-      <div className="relative flex min-h-screen bg-stone-50 dark:bg-slate-950">
+      <div className="relative flex min-h-screen bg-background">
         <div className="pointer-events-none fixed inset-0 opacity-40 dark:opacity-25" aria-hidden="true">
           <div className="mod-grid" />
         </div>
@@ -56,16 +56,16 @@ function AppLayout() {
         <div className="relative flex-1 flex flex-col min-h-screen md:ml-64 w-0">
 
           {/* Mobile top bar */}
-          <header className="md:hidden sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <header className="md:hidden sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               aria-label="Open menu"
             >
               <Menu size={20} />
             </button>
-            <img src="/logom.png" alt="ModMe" className="h-7 w-auto object-contain" />
-            <span className="font-bold text-slate-900 dark:text-white">ModMe API</span>
+            <span className="font-display text-xl leading-none">ModMe</span>
+            <span className="font-mono text-xs text-muted-foreground">API</span>
           </header>
 
           <main className="flex-1 overflow-y-auto">

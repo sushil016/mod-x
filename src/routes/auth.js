@@ -16,6 +16,12 @@ const COOKIE_OPTS = {
 
 const ACCESS_TOKEN_TTL  = 15 * 60;          // 15 minutes in seconds
 const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
+const ADMIN_EMAILS = new Set(
+  (process.env.ADMIN_EMAILS || "sahanisushil325@gmail.com")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 // ── Passport setup ──────────────────────────────────────────────────────────
 
@@ -30,13 +36,17 @@ passport.use(new GoogleStrategy(
       const email     = profile.emails?.[0]?.value;
       const name      = profile.displayName;
       const avatarUrl = profile.photos?.[0]?.value;
+      const isAdmin   = ADMIN_EMAILS.has(email?.toLowerCase());
 
       // Upsert user — update name/avatar on each login
       const [user] = await sql`
-        INSERT INTO users (google_id, email, name, avatar_url)
-        VALUES (${profile.id}, ${email}, ${name}, ${avatarUrl})
+        INSERT INTO users (google_id, email, name, avatar_url, is_admin)
+        VALUES (${profile.id}, ${email}, ${name}, ${avatarUrl}, ${isAdmin})
         ON CONFLICT (google_id) DO UPDATE
-          SET name = EXCLUDED.name, avatar_url = EXCLUDED.avatar_url
+          SET
+            name = EXCLUDED.name,
+            avatar_url = EXCLUDED.avatar_url,
+            is_admin = users.is_admin OR EXCLUDED.is_admin
         RETURNING id, email, name, avatar_url, plan, is_admin
       `;
       done(null, user);
@@ -90,6 +100,33 @@ router.get("/google/callback",
     res.redirect(`${base}/dashboard`);
   }
 );
+
+// Local-only shortcut for development when Google OAuth is not configured.
+router.get("/dev-login", async (_req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  const email = process.env.DEV_AUTH_EMAIL || "dev@modme.local";
+  const name = process.env.DEV_AUTH_NAME || "Local Developer";
+  const googleId = `dev:${email}`;
+  const isAdmin = ADMIN_EMAILS.has(email.toLowerCase());
+
+  const [user] = await sql`
+    INSERT INTO users (google_id, email, name, avatar_url, is_admin)
+    VALUES (${googleId}, ${email}, ${name}, ${null}, ${isAdmin})
+    ON CONFLICT (google_id) DO UPDATE
+      SET
+        email = EXCLUDED.email,
+        name = EXCLUDED.name,
+        is_admin = users.is_admin OR EXCLUDED.is_admin
+    RETURNING id, email, name, avatar_url, plan, is_admin
+  `;
+
+  issueTokens(res, user);
+  const base = process.env.CLIENT_URL || "http://localhost:5173";
+  res.redirect(`${base}/dashboard`);
+});
 
 router.post("/refresh", async (req, res) => {
   const rawRefresh = req.cookies?.refresh_token;

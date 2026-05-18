@@ -18,49 +18,49 @@ export default function Admin() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-keys"] }),
   });
 
-  const th = "px-4 py-3 text-left text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider";
-  const td = "px-4 py-3 text-sm text-slate-700 dark:text-slate-300";
+  const th = "px-4 py-3 text-left text-xs font-black text-muted-foreground uppercase tracking-wider";
+  const td = "px-4 py-3 text-sm text-card-foreground";
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:border-slate-800">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-brand-300">
+      <div className="editorial-banner">
+        <div className="app-kicker inline-flex items-center gap-2">
           <ShieldCheck size={14} />
           Admin layer
         </div>
-        <h1 className="text-3xl font-black">Platform management</h1>
-        <p className="mt-2 text-sm text-slate-300">Manage users, plans, API keys, and moderation capacity.</p>
+        <h1 className="app-title">Platform management</h1>
+        <p className="app-copy">Manage users, plans, API keys, and moderation capacity.</p>
       </div>
 
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[["Total Users", stats.total_users], ["Active Keys", stats.total_active_keys], ["Total Requests", stats.total_requests]].map(([label, val]) => (
-            <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 text-center shadow-sm">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-              <p className="text-3xl font-black text-gray-900 dark:text-white mt-1">{val?.toLocaleString() ?? "—"}</p>
+            <div key={label} className="app-panel p-5 text-center">
+              <p className="text-sm text-muted-foreground">{label}</p>
+              <p className="mt-1 font-display text-3xl text-foreground">{val?.toLocaleString() ?? "—"}</p>
             </div>
           ))}
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="font-black text-slate-900 dark:text-white">Users</h2>
+      <div className="app-panel overflow-hidden">
+        <div className="app-panel-header">
+          <h2 className="font-display text-xl text-foreground">Users</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <thead className="border-b border-border bg-secondary">
               <tr>{["Email", "Plan", "Keys", "Calls", "Joined", "Admin"].map(h => <th key={h} className={th}>{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {users.map(u => (
-                <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <tr key={u.id} className="hover:bg-accent transition-colors">
                   <td className={td}>{u.email}</td>
                   <td className={td}>
                     <select
                       value={u.plan}
                       onChange={e => updateUser.mutate({ id: u.id, plan: e.target.value })}
-                      className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-700 dark:text-gray-300"
+                      className="bg-muted border border-border dark:border-gray-700 rounded-lg px-2 py-1 text-xs text-card-foreground"
                     >
                       <option value="free">free</option>
                       <option value="pro">pro</option>
@@ -68,7 +68,7 @@ export default function Admin() {
                   </td>
                   <td className={td}>{u.key_count}</td>
                   <td className={td}>{u.total_calls}</td>
-                  <td className={`${td} text-gray-400`}>{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className={`${td} text-muted-foreground`}>{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className={td}>
                     <input
                       type="checkbox"
@@ -84,24 +84,24 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="font-black text-slate-900 dark:text-white">All API Keys</h2>
+      <div className="app-panel overflow-hidden">
+        <div className="app-panel-header">
+          <h2 className="font-display text-xl text-foreground">All API Keys</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <thead className="border-b border-border bg-secondary">
               <tr>{["Name", "Owner", "Calls", "Last Used", "Status", ""].map(h => <th key={h} className={th}>{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {keys.map(k => (
-                <tr key={k.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className={`${td} font-medium text-gray-900 dark:text-white`}>{k.name}</td>
+                <tr key={k.id} className="hover:bg-accent transition-colors">
+                  <td className={`${td} font-medium text-foreground`}>{k.name}</td>
                   <td className={td}>{k.owner_email}</td>
                   <td className={td}>{k.call_count}</td>
-                  <td className={`${td} text-gray-400`}>{k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : "Never"}</td>
+                  <td className={`${td} text-muted-foreground`}>{k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : "Never"}</td>
                   <td className={td}>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${k.is_active ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${k.is_active ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-muted text-gray-500"}`}>
                       {k.is_active ? "Active" : "Revoked"}
                     </span>
                   </td>

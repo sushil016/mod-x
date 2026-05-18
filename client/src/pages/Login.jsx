@@ -17,7 +17,7 @@ export default function Login() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-slate-950 flex items-center justify-center transition-colors relative overflow-hidden px-5">
+    <div className="min-h-screen bg-background flex items-center justify-center transition-colors relative overflow-hidden px-5">
       <div className="absolute inset-0 opacity-70">
         <div className="mod-grid" />
         <div className="scan-beam" />
@@ -30,19 +30,20 @@ export default function Login() {
         {theme === "dark" ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
       </button>
 
-      <div className="relative z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl shadow-slate-950/10 p-10 w-full max-w-sm text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+      <div className="relative z-10 w-full max-w-sm rounded-lg border border-border bg-card/90 p-10 text-center shadow-2xl shadow-foreground/5 backdrop-blur-xl">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <ShieldCheck size={26} />
         </div>
-        <div className="flex items-center justify-center gap-2.5 mb-5">
-          <img src="/logom.png" alt="ModMe" className="h-9 w-auto object-contain" />
+        <div className="mb-5 flex items-center justify-center gap-2.5">
+          <span className="font-display text-3xl leading-none">ModMe</span>
+          <span className="font-mono text-xs text-muted-foreground">API</span>
         </div>
-        <h1 className="text-2xl font-black text-slate-950 dark:text-white">Protect uploads faster</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400 mb-8">Sign in to manage API keys, test moderation, and activate higher limits.</p>
+        <h1 className="font-display text-3xl text-foreground">Protect uploads faster</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground mb-8">Sign in to manage API keys, test moderation, and activate higher limits.</p>
 
         <a
           href="/auth/google"
-          className="flex items-center justify-center gap-3 w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="flex w-full items-center justify-center gap-3 rounded-lg border border-border px-4 py-3 text-sm font-medium text-card-foreground transition-colors hover:bg-secondary"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -53,7 +54,16 @@ export default function Login() {
           Continue with Google
         </a>
 
-        <p className="text-xs text-gray-400 dark:text-gray-600 mt-6">By signing in you agree to our terms of service.</p>
+        {import.meta.env.DEV && (
+          <a
+            href="/auth/dev-login"
+            className="mt-3 flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Continue as local developer
+          </a>
+        )}
+
+        <p className="mt-6 text-xs text-muted-foreground">By signing in you agree to our terms of service.</p>
         <a href="/" className="text-xs text-brand-500 dark:text-brand-400 hover:underline mt-2 block">← Back to home</a>
       </div>
     </div>

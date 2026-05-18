@@ -5,13 +5,13 @@ import { Activity, Gauge, ShieldX, Trophy } from "lucide-react";
 
 function StatCard({ label, value, sub, icon: Icon }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-950/5 dark:border-slate-800 dark:bg-slate-900">
+    <div className="app-panel p-5 transition-transform hover:-translate-y-0.5">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+        <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</p>
         {Icon && <Icon size={18} className="text-brand-600 dark:text-brand-400" />}
       </div>
-      <p className="text-3xl font-black text-slate-950 dark:text-white mt-1">{value ?? "—"}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      <p className="mt-1 font-display text-3xl text-foreground">{value ?? "—"}</p>
+      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -32,10 +32,10 @@ export default function Stats() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-brand-700 dark:text-brand-400">Protection analytics</div>
-        <h1 className="text-3xl font-black text-slate-950 dark:text-white">Upload decisions over time</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Last 30 days across your active API keys</p>
+      <div className="editorial-banner">
+        <div className="app-kicker">Protection analytics</div>
+        <h1 className="app-title">Upload decisions over time</h1>
+        <p className="app-copy">Last 30 days across your active API keys</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -46,12 +46,12 @@ export default function Stats() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 sm:p-5 shadow-sm">
-          <p className="text-sm font-black text-slate-900 dark:text-white mb-4">Requests Per Day</p>
+        <div className="app-panel p-4 sm:p-5">
+          <p className="text-sm font-black text-foreground mb-4">Requests Per Day</p>
           <DailyLineChart data={daily || []} />
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 sm:p-5 shadow-sm">
-          <p className="text-sm font-black text-slate-900 dark:text-white mb-4">Decision Breakdown</p>
+        <div className="app-panel p-4 sm:p-5">
+          <p className="text-sm font-black text-foreground mb-4">Decision Breakdown</p>
           <DecisionDonut data={decisions || []} />
         </div>
       </div>
