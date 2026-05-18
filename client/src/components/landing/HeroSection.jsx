@@ -51,7 +51,7 @@ export default function HeroSection({ user, consoleSlot }) {
             </span>
           </h1>
           <p className={`mt-10 max-w-xl text-xl leading-relaxed text-muted-foreground transition-all delay-200 duration-700 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
-            One moderation API for images, GIFs, and videos. Get clear allow, flag, or block responses without building the whole pipeline yourself.
+            Protects your website uploads like images, GIFs, and videos like Racy, Sexual, Violence, Blood. Get clear allow, flag, or block responses without building the whole pipeline yourself.
           </p>
           <div className={`mt-10 flex flex-col gap-4 transition-all delay-300 duration-700 sm:flex-row ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
             <a href={ctaHref} className="group inline-flex h-14 items-center justify-center rounded-full bg-primary px-8 text-base text-primary-foreground">

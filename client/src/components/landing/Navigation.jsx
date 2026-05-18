@@ -4,6 +4,7 @@ import { useTheme } from "../../context/ThemeContext.jsx";
 
 const links = [
   { name: "Features", href: "#features" },
+  { name: "Use cases", href: "#use-cases" },
   { name: "Security", href: "#security" },
   { name: "Developers", href: "#developers" },
   { name: "Pricing", href: "#pricing" },

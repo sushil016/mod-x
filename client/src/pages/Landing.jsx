@@ -4,6 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import Navigation from "../components/landing/Navigation.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import FeaturesSection from "../components/landing/FeaturesSection.jsx";
+import UseCasesSection from "../components/landing/UseCasesSection.jsx";
 import SecuritySection from "../components/landing/SecuritySection.jsx";
 import DevelopersSection from "../components/landing/DevelopersSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
@@ -108,6 +109,7 @@ export default function Landing() {
       <main>
         <HeroSection user={user} consoleSlot={<ProductConsole />} />
         <FeaturesSection />
+        <UseCasesSection />
         <SecuritySection />
         <DevelopersSection />
         <TestimonialsSection />

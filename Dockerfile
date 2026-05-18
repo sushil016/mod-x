@@ -29,8 +29,6 @@ COPY scripts/   ./scripts/
 # Copy pre-built React SPA into the location Express serves from
 COPY --from=client-builder /build/client/dist ./client/dist
 
-# Bake in environment secrets
-COPY .env ./
 
 # Production overrides — these take priority over .env values
 # Cloud Run uses Application Default Credentials, no key file needed

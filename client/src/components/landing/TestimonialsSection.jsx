@@ -1,6 +1,6 @@
 const testimonials = [
   {
-    quote: "We integrated ModMe into Jainandiyer to protect product and user uploads without building a moderation system from scratch.",
+    quote: "They integrated ModMe into Jainandiyer client side to protect user profile and chat uploads dev don't have to build a moderation system from scratch.",
     author: "Jainandiyer",
     role: "Ecommerce food delivery application",
     metric: "Integrated upload protection",

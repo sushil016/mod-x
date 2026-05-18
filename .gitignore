@@ -3,3 +3,5 @@ node_modules/
 service-account.json
 tmp/
 *.log
+AGENTS.MD
+CLAUDE.MD

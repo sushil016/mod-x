@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const features = [
-  { number: "01", title: "Direct image moderation", description: "Static images go straight into SafeSearch for a fast first-pass decision." },
+  { number: "01", title: "Direct image moderation check", description: "It checks images for inappropriate content in real-time." },
   { number: "02", title: "GIF and video frame sampling", description: "ffmpeg extracts representative frames so motion uploads are checked instead of treated like stills." },
-  { number: "03", title: "Gray-zone reasoning", description: "Only uncertain content is escalated to Vertex AI with Google scores and the worst flagged frame." },
+  { number: "03", title: "AI based reasoning for uncertain content", description: "the AI analyzes uncertain content to provide more accurate moderation decisions." },
   { number: "04", title: "Developer-ready output", description: "Return allow, flag, or block with scores, reason, latency, and metadata your app can use immediately." },
 ];
 
