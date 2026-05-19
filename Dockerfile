@@ -2,11 +2,11 @@
 FROM node:22-alpine AS client-builder
 
 WORKDIR /build/client
-COPY client/package*.json ./
-RUN npm ci --silent
+COPY client/package.json client/yarn.lock ./
+RUN yarn install --frozen-lockfile --silent
 
 COPY client/ ./
-RUN npm run build          # outputs to /build/client/dist
+RUN yarn build             # outputs to /build/client/dist
 
 
 # ── Stage 2: Production server ───────────────────────────────────────────────
@@ -18,8 +18,8 @@ RUN apk add --no-cache ffmpeg
 WORKDIR /app
 
 # Install backend deps only (no devDependencies)
-COPY package*.json ./
-RUN npm ci --omit=dev --silent
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --production=true --silent
 
 # Copy source
 COPY src/       ./src/

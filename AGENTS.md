@@ -731,7 +731,7 @@ Codex can autonomously implement the following improvements when asked:
 - Log all moderation decisions to PostgreSQL
 - When human reviewer overrides a decision, record it
 - Use override data to auto-tune thresholds over time
-- Build a simple calibration script: `npm run calibrate`
+- Build a simple calibration script: `yarn calibrate`
 
 ### 8. Rate Limiting & Abuse Protection
 - Per-user upload rate limits (e.g., 100 uploads/hour)
@@ -754,14 +754,14 @@ Codex can autonomously implement the following improvements when asked:
 
 ```bash
 # Install dependencies
-npm install
+yarn install
 
 # Set environment variables
 cp .env.example .env
 # Fill in GOOGLE_APPLICATION_CREDENTIALS, VERTEX_AI_PROJECT, etc.
 
 # Run dev server
-npm run dev
+yarn dev
 
 # Test with a sample image
 curl -X POST http://localhost:3000/moderate \
