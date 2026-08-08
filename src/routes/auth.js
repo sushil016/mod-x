@@ -22,39 +22,48 @@ const ADMIN_EMAILS = new Set(
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
 );
+const GOOGLE_OAUTH_CONFIGURED = Boolean(
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CALLBACK_URL
+);
 
 // ── Passport setup ──────────────────────────────────────────────────────────
 
-passport.use(new GoogleStrategy(
-  {
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:  process.env.GOOGLE_CALLBACK_URL,
-  },
-  async (_accessToken, _refreshToken, profile, done) => {
-    try {
-      const email     = profile.emails?.[0]?.value;
-      const name      = profile.displayName;
-      const avatarUrl = profile.photos?.[0]?.value;
-      const isAdmin   = ADMIN_EMAILS.has(email?.toLowerCase());
+if (GOOGLE_OAUTH_CONFIGURED) {
+  passport.use(new GoogleStrategy(
+    {
+      clientID:     process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL:  process.env.GOOGLE_CALLBACK_URL,
+    },
+    async (_accessToken, _refreshToken, profile, done) => {
+      try {
+        const email     = profile.emails?.[0]?.value;
+        const name      = profile.displayName;
+        const avatarUrl = profile.photos?.[0]?.value;
+        const isAdmin   = ADMIN_EMAILS.has(email?.toLowerCase());
 
-      // Upsert user — update name/avatar on each login
-      const [user] = await sql`
-        INSERT INTO users (google_id, email, name, avatar_url, is_admin)
-        VALUES (${profile.id}, ${email}, ${name}, ${avatarUrl}, ${isAdmin})
-        ON CONFLICT (google_id) DO UPDATE
-          SET
-            name = EXCLUDED.name,
-            avatar_url = EXCLUDED.avatar_url,
-            is_admin = users.is_admin OR EXCLUDED.is_admin
-        RETURNING id, email, name, avatar_url, plan, is_admin
-      `;
-      done(null, user);
-    } catch (err) {
-      done(err);
+        // Upsert user — update name/avatar on each login
+        const [user] = await sql`
+          INSERT INTO users (google_id, email, name, avatar_url, is_admin)
+          VALUES (${profile.id}, ${email}, ${name}, ${avatarUrl}, ${isAdmin})
+          ON CONFLICT (google_id) DO UPDATE
+            SET
+              name = EXCLUDED.name,
+              avatar_url = EXCLUDED.avatar_url,
+              is_admin = users.is_admin OR EXCLUDED.is_admin
+          RETURNING id, email, name, avatar_url, plan, is_admin
+        `;
+        done(null, user);
+      } catch (err) {
+        done(err);
+      }
     }
-  }
-));
+  ));
+} else {
+  console.warn("[auth] Google OAuth is not configured. /auth/google will return 503 until GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL are set.");
+}
 
 // Passport requires serialize/deserialize even if we don't use sessions
 passport.serializeUser((user, done) => done(null, user));
@@ -87,19 +96,28 @@ function issueTokens(res, user) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-router.get("/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+if (GOOGLE_OAUTH_CONFIGURED) {
+  router.get("/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
 
-router.get("/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login?error=oauth" }),
-  (req, res) => {
-    issueTokens(res, req.user);
-    // In dev: redirect to Vite dev server. In prod: Express serves the SPA so /dashboard is fine.
-    const base = process.env.NODE_ENV === "production" ? "" : (process.env.CLIENT_URL || "http://localhost:5173");
-    res.redirect(`${base}/dashboard`);
-  }
-);
+  router.get("/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login?error=oauth" }),
+    (req, res) => {
+      issueTokens(res, req.user);
+      // In dev: redirect to Vite dev server. In prod: Express serves the SPA so /dashboard is fine.
+      const base = process.env.NODE_ENV === "production" ? "" : (process.env.CLIENT_URL || "http://localhost:5173");
+      res.redirect(`${base}/dashboard`);
+    }
+  );
+} else {
+  router.get(["/google", "/google/callback"], (_req, res) => {
+    res.status(503).json({
+      error: "Google OAuth is not configured",
+      requiredEnv: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL"],
+    });
+  });
+}
 
 // Local-only shortcut for development when Google OAuth is not configured.
 router.get("/dev-login", async (_req, res) => {

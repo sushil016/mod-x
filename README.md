@@ -10,7 +10,7 @@ It is built for teams that do not want to spend days wiring file detection, fram
 
 - Moderates images, GIFs, and videos through one endpoint.
 - Uses Google Cloud Vision SafeSearch as the fast first-pass layer.
-- Escalates uncertain content to Claude on Vertex AI for AI reasoning.
+- Escalates uncertain content to NVIDIA's OpenAI-compatible LLM API for AI reasoning.
 - Extracts frames from GIFs and videos with `ffmpeg`.
 - Returns structured decisions your app can use immediately.
 - Includes a React dashboard for API keys, usage analytics, playground testing, settings, admin, and checkout.
@@ -33,7 +33,7 @@ Decision engine
   |
   +-- clearly safe   -> allow
   +-- clearly unsafe -> block
-  +-- gray zone      -> Claude/Vertex AI reasoning
+  +-- gray zone      -> NVIDIA LLM reasoning
   |
   v
 allow / flag / block + scores + reason + latency
@@ -50,7 +50,7 @@ The key idea is cost control: obvious uploads are handled by Google Vision, whil
 | Auth | Google OAuth, JWT cookies, dev login |
 | Database | PostgreSQL |
 | Moderation layer 1 | Google Cloud Vision SafeSearch |
-| Moderation layer 2 | Claude on Google Vertex AI |
+| Moderation layer 2 | NVIDIA OpenAI-compatible LLM API |
 | Video/GIF processing | ffmpeg, fluent-ffmpeg |
 | Upload handling | multer |
 | Package manager | Yarn Classic |
@@ -69,7 +69,7 @@ mod-me/
 │   ├── middleware/          # JWT, rate limiting, API key auth
 │   ├── orchestrator.js      # Main moderation flow
 │   ├── google-vision.js     # SafeSearch wrapper
-│   ├── claude-vertex.js     # Vertex AI reasoning wrapper
+│   ├── claude-vertex.js     # NVIDIA LLM reasoning wrapper
 │   ├── frame-extractor.js   # GIF/video frame extraction
 │   └── db.js                # PostgreSQL migrations
 ├── queues/                  # Human review queue hook
@@ -88,7 +88,7 @@ Install these first:
 - PostgreSQL database URL, for example Neon or Supabase
 - ffmpeg
 - Google Cloud project with Vision API enabled
-- Vertex AI access for Claude, if using gray-zone reasoning
+- NVIDIA API key, if using gray-zone reasoning
 
 On macOS:
 
@@ -131,7 +131,7 @@ cp .env.example .env
 Minimum local development values:
 
 ```env
-PORT=3000
+PORT=4000
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
 
@@ -148,11 +148,16 @@ For real moderation, also configure:
 
 ```env
 GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+# For Docker, use GOOGLE_APPLICATION_CREDENTIALS_JSON instead of a local file.
+GOOGLE_APPLICATION_CREDENTIALS_JSON=
+# Or use base64 JSON to avoid broken private_key newlines in .env/dashboard values.
+GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64=
 GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 
-VERTEX_AI_REGION=us-east5
-VERTEX_AI_PROJECT=your-gcp-project-id
-VERTEX_AI_MODEL=claude-sonnet-4-5
+NVIDIA_API_KEY=your-nvidia-api-key
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=deepseek-ai/deepseek-v4-pro
+NVIDIA_MAX_TOKENS=16384
 ```
 
 For Google OAuth in production:
@@ -162,6 +167,21 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=https://your-domain.com/auth/google/callback
 ```
+
+### Switching To Another GCP Account
+
+The LLM layer does not use GCP anymore. It uses NVIDIA through `NVIDIA_API_KEY`.
+
+For a new GCP account, update only the Google services:
+
+1. Create or choose a Google Cloud project.
+2. Enable the Cloud Vision API.
+3. Create a service account with Vision API access.
+4. Download the service account JSON.
+5. Locally, set `GOOGLE_APPLICATION_CREDENTIALS=./service-account.json`.
+6. In Docker, remove `GOOGLE_APPLICATION_CREDENTIALS` and set either `GOOGLE_APPLICATION_CREDENTIALS_JSON` to the full JSON content or `GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64` to the base64-encoded JSON.
+7. Update `GOOGLE_CLOUD_PROJECT` to the new project ID.
+8. If you use Google login, create OAuth credentials in the new account and update `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_CALLBACK_URL`.
 
 ## 4. Run Database Migrations
 
@@ -200,7 +220,7 @@ http://localhost:5173
 The Vite frontend proxies API calls to:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
 ## 6. Local Login
@@ -237,7 +257,7 @@ API keys start with your generated key format and are stored in PostgreSQL.
 Use your generated API key:
 
 ```bash
-curl -X POST http://localhost:3000/moderate \
+curl -X POST http://localhost:4000/moderate \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "file=@./tests/sample.jpg"
 ```
@@ -256,6 +276,7 @@ Example response:
   },
   "performance": {
     "googleMs": 312,
+    "llmMs": 0,
     "claudeMs": 0,
     "totalMs": 312
   }
@@ -320,7 +341,7 @@ Creates an API key.
 Moderates one uploaded file. Requires API key.
 
 ```bash
-curl -X POST http://localhost:3000/moderate \
+curl -X POST http://localhost:4000/moderate \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "file=@image.jpg"
 ```
@@ -391,18 +412,64 @@ The Docker image:
 
 Do not bake secrets into the image. Set environment variables in your hosting provider.
 
-## Deployment Recommendation
+For Docker deployments, do not set `GOOGLE_APPLICATION_CREDENTIALS=./service-account.json` unless that file exists inside the container. Prefer `GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64` or `GOOGLE_APPLICATION_CREDENTIALS_JSON`. The app writes normalized credentials to a temporary file at startup for Google SDKs.
 
-This app is not a simple static frontend. It handles large file uploads, cookies, PostgreSQL, `ffmpeg`, and long-running moderation work.
+## Azure VM Deployment With A Custom Domain And HTTPS
 
-Recommended deployment path:
+The production deployment runs the app, Redis, and Caddy in Docker Compose on one Azure Ubuntu VM. Caddy serves the React app and API at the same hostname, redirects HTTP to HTTPS, and automatically obtains and renews the TLS certificate.
 
-1. Deploy the Docker app on Railway, Render, Fly.io, or another container platform.
-2. Use Neon or Supabase for PostgreSQL.
-3. Set all `.env` values in the provider dashboard.
-4. Point `GOOGLE_CALLBACK_URL` and `CLIENT_URL` to your deployed domain.
+### 1. Provision the VM
 
-Vercel is fine for a separated frontend later, but the full ModMe app should run as a Docker backend because `/moderate` needs file upload and video processing support.
+Create an **Ubuntu 24.04 LTS** Azure VM with at least 2 vCPU and 4 GB RAM. In its Network Security Group, allow inbound TCP ports **80** and **443** from the internet; restrict SSH (22) to your own IP address.
+
+Install Docker Engine and the Compose plugin, then add your deployment user to the `docker` group. Azure documents an Ubuntu VM option with Docker preinstalled as well.
+
+### 2. Point the domain to Azure
+
+Create these DNS records at your domain provider before starting Caddy:
+
+| Record | Host | Value |
+|---|---|---|
+| `A` | `modme` | your Azure VM public IPv4 address |
+| `AAAA` | `modme` | your Azure VM IPv6 address (only if configured) |
+
+Replace `modme` with the subdomain you want, such as `api` or `app`. Do not create an `AAAA` record unless that IPv6 address is reachable. Wait until `dig +short modme.example.com` returns the VM address.
+
+### 3. Configure and start
+
+```bash
+git clone https://github.com/sushil016/mod-x.git modme
+cd modme
+cp deploy/.env.production.example .env
+chmod 600 .env
+```
+
+Set `DOMAIN`, `CLIENT_URL`, and `GOOGLE_CALLBACK_URL` to your final HTTPS hostname. Also set the database URL, Google service-account JSON, NVIDIA key, and fresh JWT/cookie secrets. In Google Cloud Console, add the same callback URL to your OAuth application's authorized redirect URIs.
+
+Then deploy:
+
+```bash
+./scripts/deploy-azure-vm.sh
+```
+
+Check the service:
+
+```bash
+docker compose ps
+docker compose logs --follow caddy app
+curl https://modme.example.com/health
+```
+
+The first certificate request happens only after DNS resolves to the VM and ports 80/443 are reachable. Caddy stores certificates in its persistent Docker volume and renews them automatically.
+
+### Updates
+
+```bash
+git pull --ff-only
+./scripts/deploy-azure-vm.sh
+```
+
+Do not expose port 8080 or Redis to the internet: Compose exposes only Caddy on ports 80 and 443. Use a managed PostgreSQL provider such as Neon, Supabase, or Azure Database for PostgreSQL rather than running production PostgreSQL on this VM.
 
 ## Security Notes
 
@@ -434,7 +501,7 @@ Check:
 
 ```env
 CLIENT_URL=http://localhost:5173
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:4000/auth/google/callback
 ```
 
 For local development, use `/auth/dev-login`.
@@ -470,4 +537,3 @@ Good areas to improve:
 - better deployment templates
 
 If this project helps you, give it a star and open an issue or pull request.
-

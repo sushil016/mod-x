@@ -1,7 +1,9 @@
 // src/google-vision.js
 import { ImageAnnotatorClient } from "@google-cloud/vision";
+import { prepareGoogleCredentials } from "./google-credentials.js";
 import { logger } from "./utils.js";
 
+prepareGoogleCredentials();
 const visionClient = new ImageAnnotatorClient();
 
 // Google's ordinal likelihood enum → numeric score

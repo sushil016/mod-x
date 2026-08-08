@@ -13,7 +13,7 @@ export function detectFileType(mimeType) {
 }
 
 /**
- * Map MIME type to the media_type string expected by Claude/Vision APIs.
+ * Map MIME type to the media_type string expected by Vision APIs.
  * Extracted frames from GIFs and videos are always returned as JPEG.
  * @param {string} mimeType
  * @returns {string}

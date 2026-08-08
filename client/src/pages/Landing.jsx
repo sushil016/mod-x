@@ -65,7 +65,7 @@ function ProductConsole() {
           </div>
           <div className="overflow-hidden rounded-lg border border-border">
             <DecisionRow status="allow" label="profile-photo.jpeg" layer="Google Vision fast path" ms="287" tone="allow" />
-            <DecisionRow status="flag" label="student-short.mp4" layer="Vertex AI gray-zone review" ms="1840" tone="flag" />
+            <DecisionRow status="flag" label="student-short.mp4" layer="NVIDIA LLM gray-zone review" ms="1840" tone="flag" />
             <DecisionRow status="block" label="chat-upload.gif" layer="Google Vision threshold" ms="341" tone="block" />
           </div>
         </div>
@@ -78,7 +78,7 @@ function ProductConsole() {
               ["sourceType", "video"],
               ["adult", "0.50"],
               ["racy", "0.75"],
-              ["layer", "claude_vertex"],
+              ["layer", "nvidia_llm"],
             ].map(([key, value]) => (
               <div key={key} className="flex items-center justify-between gap-3">
                 <span className="font-mono text-xs text-muted-foreground">{key}</span>

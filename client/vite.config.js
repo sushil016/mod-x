@@ -1,8 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Read backend port from env — default 3000 (matches the Express server default).
-const BACKEND = `http://localhost:${process.env.PORT || 3000}`;
+// Local API server defaults to 4000. Override with VITE_BACKEND_URL or BACKEND_PORT if needed.
+const BACKEND =
+  process.env.VITE_BACKEND_URL ||
+  `http://localhost:${process.env.BACKEND_PORT || process.env.PORT || 4000}`;
 
 export default defineConfig({
   plugins: [react()],

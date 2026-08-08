@@ -1,5 +1,5 @@
 # ── Stage 1: Build React client ─────────────────────────────────────────────
-FROM node:22-alpine AS client-builder
+FROM node:22-bookworm-slim AS client-builder
 
 WORKDIR /build/client
 COPY client/package.json client/yarn.lock ./
@@ -10,10 +10,12 @@ RUN yarn build             # outputs to /build/client/dist
 
 
 # ── Stage 2: Production server ───────────────────────────────────────────────
-FROM node:22-alpine AS server
+FROM node:22-bookworm-slim AS server
 
 # ffmpeg required for GIF/video frame extraction
-RUN apk add --no-cache ffmpeg
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -30,12 +32,9 @@ COPY scripts/   ./scripts/
 COPY --from=client-builder /build/client/dist ./client/dist
 
 
-# Production overrides — these take priority over .env values
-# Cloud Run uses Application Default Credentials, no key file needed
-# Cloud Run sets PORT automatically
+# Production defaults. Override PORT from your hosting provider when needed.
 ENV NODE_ENV=production
 ENV PORT=8080
-ENV GOOGLE_APPLICATION_CREDENTIALS=""
 
 EXPOSE 8080
 

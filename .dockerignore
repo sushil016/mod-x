@@ -6,7 +6,8 @@ client/.vite/
 # Built output (rebuilt in Docker)
 client/dist/
 
-# Secrets — .env is intentionally included (baked into image for deployment)
+# Secrets — provide these through your hosting provider, not the image
+.env
 .env.example
 service-account.json
 

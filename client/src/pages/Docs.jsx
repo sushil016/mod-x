@@ -14,9 +14,11 @@ const RESPONSE_EXAMPLE = `{
     "spoof": 0.05
   },
   "googleReason": "Google Vision: all scores within safe range",
+  "llm": null,
   "claude": null,
   "performance": {
     "googleMs": 312,
+    "llmMs": 0,
     "claudeMs": 0,
     "totalMs": 312
   },
@@ -25,21 +27,21 @@ const RESPONSE_EXAMPLE = `{
 
 const GRAY_ZONE_EXAMPLE = `{
   "finalDecision": "flag",
-  "layer": "claude_vertex",
+  "layer": "nvidia_llm",
   "sourceType": "image",
   "googleScores": { "adult": 0.5, "violence": 0.25, "racy": 0.75 },
-  "googleReason": "Google Vision: gray zone — escalating to Claude",
-  "claude": {
+  "googleReason": "Google Vision: gray zone — escalating to NVIDIA LLM",
+  "llm": {
     "action": "flag",
     "confidence": 0.82,
     "reason": "Image contains suggestive content unsuitable for a children's platform",
     "categories": { "nudity": 0.6, "violence": 0.0, "hate_symbols": 0.0, "weapons": 0.0, "drugs": 0.0 }
   },
-  "performance": { "googleMs": 290, "claudeMs": 1840, "totalMs": 2130 },
+  "performance": { "googleMs": 290, "llmMs": 1840, "claudeMs": 1840, "totalMs": 2130 },
   "timestamp": "2026-04-08T10:23:15.000Z"
 }`;
 
-const CURL = `curl -X POST http://localhost:3000/moderate \\
+const CURL = `curl -X POST http://localhost:4000/moderate \\
   -H "Authorization: Bearer mod_sk_your_key" \\
   -F "file=@image.jpg"`;
 
@@ -59,7 +61,7 @@ const PYTHON = `import requests
 
 with open("image.jpg", "rb") as f:
     res = requests.post(
-        "http://localhost:3000/moderate",
+        "http://localhost:4000/moderate",
         headers={"Authorization": "Bearer mod_sk_your_key"},
         files={"file": f},
     )
@@ -176,7 +178,7 @@ export default function Docs() {
               <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">block</code>.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Moderation uses two AI layers: Google Cloud Vision SafeSearch for fast, cheap first-pass scoring, and Claude on Vertex AI for nuanced judgment in the gray zone (scores between 0.50 and 0.75). Only ~15% of content reaches Claude, keeping costs low.
+              Moderation uses two AI layers: Google Cloud Vision SafeSearch for fast, cheap first-pass scoring, and NVIDIA's OpenAI-compatible LLM API for nuanced judgment in the gray zone (scores between 0.50 and 0.75). Only ~15% of content reaches the LLM, keeping costs low.
             </p>
           </Section>
 
@@ -239,12 +241,12 @@ export default function Docs() {
             <div className="space-y-3 mb-6">
               {[
                 { field: "finalDecision", type: "string",      desc: '"allow" | "flag" | "block"' },
-                { field: "layer",         type: "string",      desc: '"google_vision" | "claude_vertex" — which AI made the final call' },
+                { field: "layer",         type: "string",      desc: '"google_vision" | "nvidia_llm" — which AI made the final call' },
                 { field: "sourceType",    type: "string",      desc: '"image" | "gif" | "video"' },
                 { field: "googleScores",  type: "object",      desc: "adult, violence, racy, medical, spoof — float 0–1" },
                 { field: "googleReason",  type: "string",      desc: "Human-readable reason from the Google Vision layer" },
-                { field: "claude",        type: "object|null", desc: "Present only when escalated: action, confidence, reason, categories" },
-                { field: "performance",   type: "object",      desc: "googleMs, claudeMs, totalMs in milliseconds" },
+                { field: "llm",           type: "object|null", desc: "Present only when escalated: action, confidence, reason, categories" },
+                { field: "performance",   type: "object",      desc: "googleMs, llmMs, totalMs in milliseconds" },
                 { field: "meta",          type: "object",      desc: "Echoes x-upload-id and x-user-id headers if provided" },
                 { field: "timestamp",     type: "string",      desc: "ISO 8601 UTC timestamp" },
               ].map(({ field, type, desc }) => (
@@ -261,7 +263,7 @@ export default function Docs() {
                 <CodeBlock code={RESPONSE_EXAMPLE} lang="json" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-card-foreground mb-2">Gray zone (Claude escalation)</p>
+                <p className="text-sm font-semibold text-card-foreground mb-2">Gray zone (LLM escalation)</p>
                 <CodeBlock code={GRAY_ZONE_EXAMPLE} lang="json" />
               </div>
             </div>

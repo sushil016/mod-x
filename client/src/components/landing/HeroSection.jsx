@@ -67,7 +67,7 @@ export default function HeroSection({ user, consoleSlot }) {
         </div>
       </div>
 
-      <div className={`absolute bottom-12 left-0 right-0 transition-opacity delay-500 duration-700 ${isVisible ? "opacity-100" : "opacity-0"}`}>
+      {/* <div className={`absolute bottom-1 left-0 right-0 transition-opacity delay-500 duration-700 ${isVisible ? "opacity-100" : "opacity-0"}`}>
         <div className="marquee flex gap-16 whitespace-nowrap">
           {[...Array(2)].map((_, setIndex) => (
             <div key={setIndex} className="flex gap-16">
@@ -85,7 +85,7 @@ export default function HeroSection({ user, consoleSlot }) {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }

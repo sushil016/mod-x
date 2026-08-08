@@ -25,6 +25,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = parseInt(process.env.PORT || "3000");
 
+// HTTPS terminates at Caddy in production. Trust its forwarded protocol so
+// Express can issue secure OAuth session cookies correctly.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 // ── Core middleware ──────────────────────────────────────────────────────────
 app.use(cors({
   origin: process.env.CLIENT_URL || "http://localhost:5173",

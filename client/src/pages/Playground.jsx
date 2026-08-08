@@ -160,7 +160,7 @@ export default function Playground() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <VerdictBadge decision={result.finalDecision} />
             <span className="text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-              via {result.layer === "google_vision" ? "Google Vision" : "Claude AI"}
+              via {result.layer === "google_vision" ? "Google Vision" : "NVIDIA LLM"}
             </span>
           </div>
 
@@ -171,17 +171,17 @@ export default function Playground() {
             <ScoreBar label="Racy"     score={result.googleScores?.racy} />
           </div>
 
-          {result.claude && (
+          {(result.llm || result.claude) && (
             <div className="bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-800 rounded-xl p-4">
-              <p className="text-xs font-semibold text-brand-700 dark:text-brand-400 mb-1">Claude AI Decision</p>
-              <p className="text-sm text-brand-800 dark:text-brand-300">{result.claude.reason}</p>
-              <p className="text-xs text-brand-500 dark:text-brand-500 mt-1">Confidence: {Math.round((result.claude.confidence || 0) * 100)}%</p>
+              <p className="text-xs font-semibold text-brand-700 dark:text-brand-400 mb-1">NVIDIA LLM Decision</p>
+              <p className="text-sm text-brand-800 dark:text-brand-300">{(result.llm || result.claude).reason}</p>
+              <p className="text-xs text-brand-500 dark:text-brand-500 mt-1">Confidence: {Math.round(((result.llm || result.claude).confidence || 0) * 100)}%</p>
             </div>
           )}
 
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span>Google: {result.performance?.googleMs}ms</span>
-            {result.performance?.claudeMs > 0 && <span>Claude: {result.performance.claudeMs}ms</span>}
+            {(result.performance?.llmMs || result.performance?.claudeMs) > 0 && <span>LLM: {result.performance.llmMs || result.performance.claudeMs}ms</span>}
             <span>Total: {result.performance?.totalMs}ms</span>
           </div>
 

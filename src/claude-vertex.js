@@ -1,26 +1,22 @@
 // src/claude-vertex.js
-import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { logger } from "./utils.js";
 
-const client = new AnthropicVertex({
-  region:    process.env.VERTEX_AI_REGION    || "us-east5",
-  projectId: process.env.VERTEX_AI_PROJECT   || "dazzling-spirit-426406-m4",
-});
-
-const MODEL = process.env.VERTEX_AI_MODEL || "claude-sonnet-4-5";
+const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1";
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL || "deepseek-ai/deepseek-v4-pro";
+const NVIDIA_MAX_TOKENS = parseInt(process.env.NVIDIA_MAX_TOKENS || "16384", 10);
 
 /**
- * Secondary moderation via Claude on Vertex AI.
+ * Secondary moderation via NVIDIA's OpenAI-compatible chat API.
  * Called ONLY for gray-zone content (~15% of uploads).
  *
- * @param {Buffer}  imageBuffer   - worst flagged frame (JPEG)
+ * @param {Buffer}  imageBuffer   - kept for API compatibility; NVIDIA chat model reasons from scores/meta.
  * @param {Object}  googleScores  - { adult, violence, racy } from Google Vision
  * @param {string}  sourceType    - "image" | "gif" | "video"
  * @param {Object}  [meta]        - { frameIndex, totalFrames, flaggedFrames }
  * @returns {Promise<{ action: string, confidence: number, reason: string, safe: boolean, categories: Object }>}
  */
 export async function claudeSecondaryCheck(imageBuffer, googleScores, sourceType, meta = {}) {
-  const base64 = imageBuffer.toString("base64");
+  void imageBuffer;
 
   const contextNote =
     sourceType !== "image"
@@ -28,17 +24,22 @@ export async function claudeSecondaryCheck(imageBuffer, googleScores, sourceType
         `${meta.flaggedFrames || 0} frame(s) were flagged by Google Vision.`
       : "This is a single image.";
 
-  const systemPrompt = `You are a strict content moderator for a student education platform serving children aged 6–18.
+  const systemPrompt = `You are a strict content moderation reasoning layer for apps that accept user uploads.
 Google Cloud Vision flagged this content as uncertain with these scores:
 - Adult: ${googleScores.adult}
 - Violence: ${googleScores.violence}
 - Racy: ${googleScores.racy}
+- Medical: ${googleScores.medical ?? 0}
+- Spoof: ${googleScores.spoof ?? 0}
 
 ${contextNote}
 
-Analyze the image carefully considering context. A medical diagram is not inappropriate.
-A cartoon fight in an educational game is not the same as graphic violence.
-However, be strict — when in doubt, flag for human review.
+You do not receive the raw image. Reason only from the Google Vision scores and upload metadata.
+Use cost-safe escalation logic:
+- allow when scores look benign or explainable
+- block when scores strongly indicate unsafe content
+- flag when the evidence is uncertain and needs review
+Be strict for user-generated uploads, but do not over-block borderline educational, medical, or harmless content.
 
 Respond ONLY with valid JSON in this exact format (no markdown, no explanation outside JSON):
 {
@@ -55,55 +56,70 @@ Respond ONLY with valid JSON in this exact format (no markdown, no explanation o
   "reason": "one sentence explanation"
 }`;
 
-  let response;
-  try {
-    response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 512,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              // Frames extracted from GIF/video are always JPEG; for single images
-              // the buffer is sent as-is and most vision models are self-describing
-              // from the binary header, but we declare JPEG as the safe default.
-              source: { type: "base64", media_type: "image/jpeg", data: base64 },
-            },
-            {
-              type: "text",
-              text: `Make the final moderation decision for this ${sourceType}.`,
-            },
-          ],
-        },
-      ],
-    });
-  } catch (err) {
-    logger.error("Claude Vertex API error", { error: err.message });
-    // Fail safe: flag for human review on any API error
+  if (!process.env.NVIDIA_API_KEY) {
+    logger.error("NVIDIA API key missing");
     return {
       safe: false,
       confidence: 0,
       action: "flag",
-      reason: `Claude API error — flagged for human review: ${err.message}`,
+      reason: "NVIDIA_API_KEY is missing — flagged for human review",
       categories: {},
     };
   }
 
-  const rawText = response.content?.[0]?.text || "";
+  let payload;
+  try {
+    const response = await fetch(`${NVIDIA_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: NVIDIA_MODEL,
+        temperature: 0.2,
+        top_p: 0.95,
+        max_tokens: NVIDIA_MAX_TOKENS,
+        stream: false,
+        chat_template_kwargs: { thinking: false },
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Make the final moderation decision for this ${sourceType}. Return JSON only.`,
+          },
+        ],
+      }),
+    });
+
+    payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload?.error?.message || `NVIDIA API returned ${response.status}`);
+    }
+  } catch (err) {
+    logger.error("NVIDIA LLM API error", { error: err.message });
+    return {
+      safe: false,
+      confidence: 0,
+      action: "flag",
+      reason: `NVIDIA LLM API error — flagged for human review: ${err.message}`,
+      categories: {},
+    };
+  }
+
+  const rawText = payload?.choices?.[0]?.message?.content || "";
 
   try {
     const clean = rawText.replace(/```json|```/g, "").trim();
     return JSON.parse(clean);
   } catch {
-    logger.error("Claude response parse error", { rawText });
+    logger.error("NVIDIA LLM response parse error", { rawText });
     return {
       safe: false,
       confidence: 0,
       action: "flag",
-      reason: "Claude response malformed — flagged for human review",
+      reason: "NVIDIA LLM response malformed — flagged for human review",
       categories: {},
     };
   }

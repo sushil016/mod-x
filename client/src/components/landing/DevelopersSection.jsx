@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react";
 const examples = [
   {
     label: "cURL",
-    code: `curl -X POST http://localhost:3000/moderate \\
+    code: `curl -X POST http://localhost:4000/moderate \\
   -H "Authorization: Bearer mod_sk_live_..." \\
   -F "file=@upload.mp4"`,
   },

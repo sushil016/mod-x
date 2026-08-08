@@ -71,15 +71,15 @@ export async function runModeration(fileBuffer, mimeType, meta = {}) {
     return buildResult("allow", "google_vision", googleResult, null, latencyGoogle, meta);
   }
 
-  // ── GRAY ZONE: escalate to Claude ───────────────────────────────
-  logger.info("Gray zone — escalating to Claude", { sourceType: googleResult.sourceType });
+  // ── GRAY ZONE: escalate to NVIDIA LLM ───────────────────────────
+  logger.info("Gray zone — escalating to NVIDIA LLM", { sourceType: googleResult.sourceType });
 
-  const frameForClaude =
+  const frameForLlm =
     frames.length > 0 ? frames[googleResult.worstFrameIndex || 0] : fileBuffer;
 
-  const claudeStart = Date.now();
-  const claudeResult = await claudeSecondaryCheck(
-    frameForClaude,
+  const llmStart = Date.now();
+  const llmResult = await claudeSecondaryCheck(
+    frameForLlm,
     googleResult.worstScores || googleResult.scores,
     googleResult.sourceType,
     {
@@ -88,19 +88,19 @@ export async function runModeration(fileBuffer, mimeType, meta = {}) {
       flaggedFrames: googleResult.flaggedFrameCount || 0,
     }
   );
-  const latencyClaude = Date.now() - claudeStart;
+  const latencyLlm = Date.now() - llmStart;
 
   const finalResult = buildResult(
-    claudeResult.action,
-    "claude_vertex",
+    llmResult.action,
+    "nvidia_llm",
     googleResult,
-    claudeResult,
+    llmResult,
     latencyGoogle,
     meta,
-    latencyClaude
+    latencyLlm
   );
 
-  if (claudeResult.action === "flag") {
+  if (llmResult.action === "flag") {
     await addToHumanReviewQueue({ ...finalResult, uploadMeta: meta });
   }
 
@@ -112,25 +112,29 @@ export async function runModeration(fileBuffer, mimeType, meta = {}) {
   return finalResult;
 }
 
-function buildResult(decision, layer, googleResult, claudeResult, latencyGoogle, meta, latencyClaude = 0) {
+function buildResult(decision, layer, googleResult, llmResult, latencyGoogle, meta, latencyLlm = 0) {
+  const llmPayload = llmResult
+    ? {
+        action:     llmResult.action,
+        confidence: llmResult.confidence,
+        reason:     llmResult.reason,
+        categories: llmResult.categories,
+      }
+    : null;
+
   return {
     finalDecision:  decision,
     layer,
     sourceType:     googleResult.sourceType,
     googleScores:   googleResult.worstScores || googleResult.scores,
     googleReason:   googleResult.reason,
-    claude: claudeResult
-      ? {
-          action:     claudeResult.action,
-          confidence: claudeResult.confidence,
-          reason:     claudeResult.reason,
-          categories: claudeResult.categories,
-        }
-      : null,
+    llm: llmPayload,
+    claude: llmPayload,
     performance: {
       googleMs: latencyGoogle,
-      claudeMs: latencyClaude,
-      totalMs:  latencyGoogle + latencyClaude,
+      llmMs:    latencyLlm,
+      claudeMs: latencyLlm,
+      totalMs:  latencyGoogle + latencyLlm,
     },
     meta,
     timestamp: new Date().toISOString(),

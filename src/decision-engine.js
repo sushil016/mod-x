@@ -42,7 +42,7 @@ export function makeDecision(scores) {
     return {
       decision: "review",
       scores,
-      reason: "Google Vision: gray zone — escalating to Claude",
+      reason: "Google Vision: gray zone — escalating to NVIDIA LLM",
     };
   }
 
